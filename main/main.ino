@@ -24,30 +24,66 @@ void handleButtons() {
     display.clearScreen();
     delay(500); // Simple debounce, so we don't repeatedly trigger the action.
   }
+
+  if (display.getButtons() & TSButtonLowerRight) {
+    // Action for the bottom-rightmost button
+    // For demonstration purposes, let's just invert the screen colors:
+    display.clearScreen();
+    display.fontColor(TS_8b_Green, TS_8b_Black);
+    display.setCursor(10, 30); 
+    display.print("Button Pressed");
+    delay(500); // Simple debounce
+  }
 }
 
 
 void drawMenu() {
   display.clearScreen();
 
-  // Small arrow coordinates
-  int baseX = 4; 
-  int baseY = 4;
+  // Top-left arrow coordinates
+  int topLeftBaseX = 4; 
+  int topLeftBaseY = 4;
 
-  // Draw the arrow
-  display.drawLine(baseX, baseY + 4, baseX + 7, baseY, TS_8b_Green); // Diagonal upper line
-  display.drawLine(baseX, baseY + 4, baseX + 7, baseY + 8, TS_8b_Green); // Diagonal lower line
+  // Draw the top-left arrow
+  display.drawLine(topLeftBaseX, topLeftBaseY + 4, topLeftBaseX + 5, topLeftBaseY, TS_8b_Green);
+  display.drawLine(topLeftBaseX, topLeftBaseY + 4, topLeftBaseX + 5, topLeftBaseY + 8, TS_8b_Green);
   
-  // Fill the inside of the arrow
-  for (int i = 0; i < 7; i++) {
-    int startY = baseY + 4 + i;
-    int endY = baseY + 4 - i;
-    display.drawLine(baseX + i, startY, baseX + i, endY, TS_8b_Green);
+  // Fill the inside of the top-left arrow
+  for (int i = 0; i < 6; i++) {
+    int startY = topLeftBaseY + 4 + i;
+    int endY = topLeftBaseY + 4 - i;
+    display.drawLine(topLeftBaseX + i, startY, topLeftBaseX + i, endY, TS_8b_Green);
   }
 
-  // Draw "Log" text right next to the arrow
+  // Draw "Log" text right next to the top-left arrow
   display.fontColor(TS_8b_Green, TS_8b_Black);
-  display.setCursor(baseX + 10, 3);
+  display.setCursor(topLeftBaseX + 10, 3);
   display.print("Log");
+
+  // Bottom-right arrow coordinates
+  int bottomRightBaseX = 88; // Adjusted for bottom-right position
+  int bottomRightBaseY = 54; 
+
+  // Draw the bottom-right arrow
+  display.drawLine(bottomRightBaseX, bottomRightBaseY, bottomRightBaseX + 6, bottomRightBaseY + 4, TS_8b_Green);
+  display.drawLine(bottomRightBaseX, bottomRightBaseY + 8, bottomRightBaseX + 6, bottomRightBaseY + 4, TS_8b_Green);
+  
+  // Fill the inside of the bottom-right arrow
+  for (int i = 0; i < 6; i++) {
+    int startY = bottomRightBaseY;
+    int endY = bottomRightBaseY + 8;
+    display.drawLine(bottomRightBaseX + i, startY + i, bottomRightBaseX + i, endY - i, TS_8b_Green);
+  }
+
+  // Draw "Go" text to the left of the bottom-right arrow
+  display.fontColor(TS_8b_Green, TS_8b_Black);
+  display.setCursor(bottomRightBaseX - 18, 53); // Adjusted to position "Go" to the left of the arrow
+  display.print("Go");
 }
+
+
+
+
+
+
 
