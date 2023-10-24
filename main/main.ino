@@ -77,7 +77,7 @@ void drawMenu() {
 
   // Draw "Go" text to the left of the bottom-right arrow
   display.fontColor(TS_8b_Green, TS_8b_Black);
-  display.setCursor(bottomRightBaseX - 18, 53); // Adjusted to position "Go" to the left of the arrow
+  display.setCursor(bottomRightBaseX - 18, 53); // Adjusted to position "Go" to the left of the arroww
   display.print("Go");
 }
 
