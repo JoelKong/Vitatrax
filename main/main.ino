@@ -14,6 +14,8 @@ bool firstSpriteShown = false;
 const unsigned long DEBOUNCE_DELAY = 200; // in milliseconds
 unsigned long lastButtonPressTime = 0;
 
+
+// Setup and Loop
 void setup() {
   initializeDisplay();
   drawInitialScreen();
@@ -27,6 +29,7 @@ void loop() {
   handleButtonPresses();
 }
 
+// Buttons
 void handleButtonPresses() {
   unsigned long currentTime = millis();
   if ((currentTime - lastButtonPressTime) > DEBOUNCE_DELAY) {
@@ -74,7 +77,7 @@ void displayAnimationScreen() {
   if (!firstSpriteShown) {
     drawBMPImage(40, 24, sprites[0], 16, 16);
     firstSpriteShown = true;
-    delay(1000);
+    delay(600);
     return;
   }
 
@@ -83,7 +86,7 @@ void displayAnimationScreen() {
   drawAnimationNavigation();
 
   animationCounter = (animationCounter == 1 ? 2 : 1);
-  delay(1000);
+  delay(600);
 }
 
 void clearCharacterArea() {
