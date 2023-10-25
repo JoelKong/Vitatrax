@@ -7,13 +7,24 @@
 TinyScreen display = TinyScreen(TinyScreenDefault);
 const unsigned int* sprites[3] = {playerFaceSouthBMP, playerWalkSouthLeftBMP, playerWalkSouthRightBMP};
 
-// Animation Screen Variables
+// Screen Variables
 int animationCounter = 0;
-bool isAnimating = true;
 bool firstSpriteShown = false;
 const unsigned long DEBOUNCE_DELAY = 200; // in milliseconds
 unsigned long lastButtonPressTime = 0;
 
+// Stopwatch variables
+bool stopwatchRunning = false;
+unsigned long stopwatchStartTime = 0;
+unsigned long elapsedMillis = 0;
+
+enum ScreenType {
+  ANIMATION_SCREEN,
+  MENU_SCREEN,
+  TRACKER_SCREEN
+};
+
+ScreenType currentScreen = ANIMATION_SCREEN;
 
 // Setup and Loop
 void setup() {
@@ -22,8 +33,16 @@ void setup() {
 }
 
 void loop() {
-  if (isAnimating) {
-    displayAnimationScreen();
+  switch (currentScreen) {
+    case ANIMATION_SCREEN:
+      displayAnimationScreen();
+      break;
+    case MENU_SCREEN:
+      // Nothing for now; the menu screen is static.
+      break;
+    case TRACKER_SCREEN:
+      displayStopwatch(); // Update and display the stopwatch
+      break;
   }
   
   handleButtonPresses();
@@ -33,25 +52,53 @@ void loop() {
 void handleButtonPresses() {
   unsigned long currentTime = millis();
   if ((currentTime - lastButtonPressTime) > DEBOUNCE_DELAY) {
-    if (isAnimating && (display.getButtons() & TSButtonLowerRight)) {
-      transitionToMenuScreen();
-      lastButtonPressTime = currentTime;
-    } else if (!isAnimating && (display.getButtons() & TSButtonUpperLeft)) {
-      transitionToAnimationScreen();
-      lastButtonPressTime = currentTime;
+    switch (currentScreen) {
+      case ANIMATION_SCREEN:
+        if (display.getButtons() & TSButtonLowerRight) {
+          transitionToMenuScreen();
+          lastButtonPressTime = currentTime;
+        }
+        break;
+      case MENU_SCREEN:
+        if (display.getButtons() & TSButtonLowerRight) {
+          transitionToTrackerScreen();
+          lastButtonPressTime = currentTime;
+        } else if (display.getButtons() & TSButtonUpperLeft) {
+          transitionToAnimationScreen();
+          lastButtonPressTime = currentTime;
+        }
+        break;
+      case TRACKER_SCREEN:
+        if (display.getButtons() & TSButtonUpperLeft) {
+          transitionToMenuScreen();
+          lastButtonPressTime = currentTime;
+        } else if (display.getButtons() & TSButtonLowerRight) {
+          toggleStopwatch();  // Toggle the stopwatch when the bottom right button is pressed
+          lastButtonPressTime = currentTime;
+        } else if (display.getButtons() & TSButtonLowerLeft) {
+            resetStopwatch();  // Reset the stopwatch when the bottom left button is pressed
+            lastButtonPressTime = currentTime;
+          }
+        break;
     }
   }
 }
 
 void transitionToMenuScreen() {
-  isAnimating = false;
+  resetStopwatch();
+  currentScreen = MENU_SCREEN;
   drawMenu();
 }
 
 void transitionToAnimationScreen() {
-  isAnimating = true;
+  currentScreen = ANIMATION_SCREEN;
   firstSpriteShown = false;
   drawInitialScreen();
+}
+
+void transitionToTrackerScreen() {
+  currentScreen = TRACKER_SCREEN;
+  drawTracker();
 }
 
 
@@ -70,7 +117,7 @@ void initializeDisplay() {
 void drawInitialScreen() {
   display.drawRect(0, 0, 96, 64, TSRectangleFilled, TS_8b_White);
   drawRightArrow(88, 54); // Bottom-right arrow
-  drawTextBesideArrow("Go", 70, 53);
+  drawTextBesideArrow("Go", 70, 53, TS_8b_White);
 }
 
 void displayAnimationScreen() {
@@ -98,7 +145,7 @@ void drawAnimationNavigation() {
   const int arrowBaseY = 54;
 
   drawRightArrow(arrowBaseX, arrowBaseY);
-  drawTextBesideArrow("Go", arrowBaseX - 18, 53);
+  drawTextBesideArrow("Go", arrowBaseX - 18, 53, TS_8b_White);
 }
 
 void drawBMPImage(int x, int y, const unsigned int* image, int width, int height) {
@@ -129,8 +176,8 @@ void drawLeftArrow(int baseX, int baseY) {
     }
 }
 
-void drawTextBesideArrow(const char* text, int x, int y) {
-  display.fontColor(TS_8b_Green, TS_8b_Black);
+void drawTextBesideArrow(const char* text, int x, int y, uint8_t bg) {
+  display.fontColor(TS_8b_Green, bg);
   display.setCursor(x, y);
   display.print(text);
 }
@@ -146,10 +193,10 @@ void drawMenu() {
 
   // This can be expanded for more menu items later on
   drawLeftArrow(4, 4); // Top-left arrow pointing left
-  drawTextBesideArrow("Log", 14, 3);
+  drawTextBesideArrow("Log", 14, 3, TS_8b_Black);
 
   drawRightArrow(88, 54); // Bottom-right arrow
-  drawTextBesideArrow("Go", 70, 53);
+  drawTextBesideArrow("Go", 70, 53, TS_8b_Black);
 }
 
 
@@ -157,6 +204,78 @@ void drawMenu() {
 
 
 // Third screen
+void drawTracker() {
+  if (currentScreen == TRACKER_SCREEN) {  // Guard the drawing with a condition to prevent unnecessary redrawing
+    display.clearScreen();
+    drawLeftArrow(4, 4); // Top-left arrow pointing left
+    drawTextBesideArrow("Back", 14, 3, TS_8b_Black);
+
+    drawLeftArrow(4, 53); // Top-left arrow pointing left
+    drawTextBesideArrow("Reset", 14, 52, TS_8b_Black);
+
+    // drawRightArrow(88, 53); // Adjusted to move the arrow a bit to the right
+    // drawTextBesideArrow("Start", 58, 52, TS_8b_Black);
+    // drawTextBesideArrow("Stop", 60, 52, TS_8b_Black);
+    if (stopwatchRunning) {
+      drawRightArrow(88, 53); // Adjusted to move the arrow a bit to the right
+      drawTextBesideArrow("Stop", 60, 52, TS_8b_Black);
+    } else {
+      drawRightArrow(88, 53); // Adjusted to move the arrow a bit to the right
+      drawTextBesideArrow("Start", 58, 52, TS_8b_Black);
+    }
+  }
+}
+
+
+// Stopwatch Functions
+void startStopwatch() {
+  stopwatchStartTime = millis();
+  stopwatchRunning = true;
+}
+
+void stopStopwatch() {
+  elapsedMillis += millis() - stopwatchStartTime;
+  stopwatchRunning = false;
+}
+
+void resetStopwatch() {
+  stopwatchRunning = false;
+  elapsedMillis = 0;
+  if (stopwatchRunning) {
+    stopwatchStartTime = millis();
+  }
+  drawTracker();
+}
+
+void displayStopwatch() {
+  if (stopwatchRunning) {
+    elapsedMillis += millis() - stopwatchStartTime;
+    stopwatchStartTime = millis();
+  }
+
+  int elapsedSeconds = elapsedMillis / 1000;
+  int minutes = elapsedSeconds / 60;
+  int seconds = elapsedSeconds % 60;
+
+  display.setCursor(40, 18); // Adjust these values to position the stopwatch in the middle of the screen
+  display.print(minutes);
+  display.print(":");
+  if (seconds < 10) display.print("0");
+  display.print(seconds);
+}
+
+void toggleStopwatch() {
+  if (stopwatchRunning) {
+    // Stop the stopwatch
+    elapsedMillis += millis() - stopwatchStartTime;
+    stopwatchRunning = false;
+  } else {
+    // Start the stopwatch
+    stopwatchStartTime = millis();
+    stopwatchRunning = true;
+  }
+  drawTracker();  // Refresh the tracker screen to update the UI
+}
 
 
 
