@@ -70,7 +70,7 @@ void setup() {
   initializeAccel();
   drawInitialScreen();
   SerialMonitorInterface.begin(9600);
-  // while (!SerialMonitorInterface); //This line will block until a serial monitor is opened with TinyScreen+!
+  while (!SerialMonitorInterface); //This line will block until a serial monitor is opened with TinyScreen+!
   BLEsetup();
 }
 
