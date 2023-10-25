@@ -1,7 +1,16 @@
+// Add libraries
 #include <Wire.h>
 #include <SPI.h>
 #include <TinyScreen.h>
+#include <SPI.h>
+#include <STBLE.h>
+#include "BMA250.h"
 #include "sprites.h"
+
+
+// Initialise accelerometer
+BMA250 accel_sensor;
+double temp;
 
 // Global Objects & Constants
 TinyScreen display = TinyScreen(TinyScreenDefault);
@@ -18,6 +27,7 @@ bool stopwatchRunning = false;
 unsigned long stopwatchStartTime = 0;
 unsigned long elapsedMillis = 0;
 
+// Screens
 enum ScreenType {
   ANIMATION_SCREEN,
   MENU_SCREEN,
@@ -29,6 +39,7 @@ ScreenType currentScreen = ANIMATION_SCREEN;
 // Setup and Loop
 void setup() {
   initializeDisplay();
+  initializeAccel();
   drawInitialScreen();
 }
 
@@ -46,6 +57,13 @@ void loop() {
   }
   
   handleButtonPresses();
+}
+
+// Accelerometer setup
+void initializeAccel() {
+  Serial.begin(115200);
+  Wire.begin();
+  accel_sensor.begin(BMA250_range_2g, BMA250_update_time_64ms); 
 }
 
 // Buttons
@@ -78,7 +96,9 @@ void handleButtonPresses() {
         } else if (display.getButtons() & TSButtonLowerLeft) {
             resetStopwatch();  // Reset the stopwatch when the bottom left button is pressed
             lastButtonPressTime = currentTime;
-          }
+        } else if (display.getButtons() & TSButtonUpperRight) {
+          // Add bluetooth track here
+        }
         break;
     }
   }
@@ -213,6 +233,9 @@ void drawTracker() {
     drawLeftArrow(4, 53); // Top-left arrow pointing left
     drawTextBesideArrow("Reset", 14, 52, TS_8b_Black);
 
+    drawRightArrow(88, 4); // Adjusted to move the arrow a bit to the right
+    drawTextBesideArrow("Track", 56, 3, TS_8b_Black);
+
     // drawRightArrow(88, 53); // Adjusted to move the arrow a bit to the right
     // drawTextBesideArrow("Start", 58, 52, TS_8b_Black);
     // drawTextBesideArrow("Stop", 60, 52, TS_8b_Black);
@@ -225,7 +248,6 @@ void drawTracker() {
     }
   }
 }
-
 
 // Stopwatch Functions
 void startStopwatch() {
@@ -257,11 +279,16 @@ void displayStopwatch() {
   int minutes = elapsedSeconds / 60;
   int seconds = elapsedSeconds % 60;
 
-  display.setCursor(40, 18); // Adjust these values to position the stopwatch in the middle of the screen
+  display.setCursor(40, 16); // Adjust these values to position the stopwatch in the middle of the screen
   display.print(minutes);
   display.print(":");
   if (seconds < 10) display.print("0");
   display.print(seconds);
+
+  double temperature = readTemperature();
+  display.setCursor(40, 40);  // Adjust x and y positions accordingly
+  display.print(temperature, 1);  // Print temperature with one decimal place
+  display.print("°C");
 }
 
 void toggleStopwatch() {
@@ -277,6 +304,12 @@ void toggleStopwatch() {
   drawTracker();  // Refresh the tracker screen to update the UI
 }
 
+// Accelerometer Functions
+double readTemperature() {
+  accel_sensor.read();
+  temp = ((accel_sensor.rawTemp * 0.5) + 24.0);
+  return temp;
+}
 
 
 
