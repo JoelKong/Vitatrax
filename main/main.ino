@@ -27,6 +27,20 @@ bool stopwatchRunning = false;
 unsigned long stopwatchStartTime = 0;
 unsigned long elapsedMillis = 0;
 
+// Step count variables
+int stepGoal = 1000;
+bool validStep = false;
+int newSample = 0;
+int oldSample = 0;
+int totalSteps = 0;
+int stepIntervalLow = 200;
+unsigned long stepIntervalHigh = 2000;
+unsigned long lastStepTime = 0;
+
+const int amtSamples = 32;
+int aBuff[amtSamples];
+int aBuffPos = 0;
+
 // Screens
 enum ScreenType {
   ANIMATION_SCREEN,
@@ -49,7 +63,8 @@ void loop() {
       displayAnimationScreen();
       break;
     case MENU_SCREEN:
-      // Nothing for now; the menu screen is static.
+      // Displays menu
+      displayMenu();
       break;
     case TRACKER_SCREEN:
       displayStopwatch(); // Update and display the stopwatch
@@ -217,6 +232,90 @@ void drawMenu() {
 
   drawRightArrow(88, 54); // Bottom-right arrow
   drawTextBesideArrow("Go", 70, 53, TS_8b_Black);
+}
+
+// Steps functions
+int readSteps() {
+  accel_sensor.read();
+
+  int sum = pow(accel_sensor.X, 2);
+  sum += pow(accel_sensor.Y, 2);
+  sum += pow(accel_sensor.Z, 2);
+  int magnitude = sqrt(sum);
+
+  int difference = abs(magnitude - oldSample);
+
+  if (difference < 10) {
+    difference = 0;
+  }
+  if (difference > 30) {
+    difference = 30;
+  }
+
+  if (magnitude - oldSample > 0) {
+    difference = oldSample + difference;
+  } else {
+    difference = oldSample - difference;
+  }
+
+  aBuff[aBuffPos] = difference;
+
+  int Amin = 1000;
+  int Amax = 0;
+  for (int i = 0; i < amtSamples; i++) {
+    int sampleVal = aBuff[i];
+    if (sampleVal < Amin)Amin = sampleVal;
+    if (sampleVal > Amax)Amax = sampleVal;
+  }
+
+  int peakToPeak = Amax - Amin;
+  int threshold = (peakToPeak / 2) + Amin;
+
+  oldSample = newSample;
+
+  bool newStep = false;
+  if (abs(newSample - difference) > 10) {
+    newSample = difference;
+    if (peakToPeak > 70 && oldSample > threshold && newSample < threshold) {
+      if (validStep) {
+        if (millis() > lastStepTime + stepIntervalLow && millis() < lastStepTime + stepIntervalHigh) {
+          newStep = true;
+        } else {
+          validStep = false;
+        }
+      } else if (millis() > lastStepTime + stepIntervalLow && millis() < lastStepTime + stepIntervalHigh) {
+        newStep = true;
+        validStep = true;
+      }
+      lastStepTime = millis();
+      if (newStep) {
+        totalSteps++;
+      }
+    }
+  }
+  aBuffPos++;
+  if (aBuffPos >= amtSamples) {
+    aBuffPos = 0;
+  }
+  if (newStep)
+    return 1;
+  return 0;
+}
+
+// Displays main menu
+void displayMenu() {
+  readSteps();
+
+  display.setCursor(5, 25);
+  display.print("Alarm: ");
+
+  display.setCursor(5, 35);
+  display.print("Goal: ");
+  display.print(stepGoal);
+
+  display.setCursor(5, 45);
+  display.print("Prog: ");
+  display.print(totalSteps);
 }
 
 
