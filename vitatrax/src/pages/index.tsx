@@ -1,9 +1,9 @@
-import Test from "@/components/Test";
+import Home from "@/components/Home";
 
-export default function Home(): JSX.Element {
+export default function HomePage(): JSX.Element {
   return (
     <main>
-      <Test />
+      <Home />
     </main>
   );
 }
