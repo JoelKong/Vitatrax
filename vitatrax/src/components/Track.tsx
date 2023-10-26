@@ -8,6 +8,7 @@ export default function Track({ setModal }: any): JSX.Element {
     rxCharacteristic: "6e400002-b5a3-f393-e0a9-e50e24dcca9e",
     txCharacteristic: "6e400003-b5a3-f393-e0a9-e50e24dcca9e",
   });
+  const [result, setResult] = useState<string>("");
 
   // Connect to Bluetooth
   async function connectToBluetooth() {
@@ -79,6 +80,45 @@ export default function Track({ setModal }: any): JSX.Element {
     const userDescription = encoder.encode("hello");
     await rxCharacteristic.writeValue(userDescription);
     server.disconnect();
+  }
+
+  // Generate motivational message
+  async function generateMessage() {
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      setModal({
+        active: true,
+        type: "fail",
+        message: "Something went wrong. Please try again.",
+      });
+      return;
+    }
+
+    const data = response.body;
+    if (!data) {
+      return;
+    }
+
+    const reader = data.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+    let outputString = "";
+    setResult("");
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunkValue: any = decoder.decode(value);
+      setResult((prev) => prev + chunkValue);
+      outputString += chunkValue;
+    }
   }
 
   return (
@@ -178,21 +218,40 @@ export default function Track({ setModal }: any): JSX.Element {
               </div>
               <div className="pt-4">
                 <p className="font-medium">Mood</p>
-                <input
-                  className="w-11/12 h-12 outline-none border-2 rounded-xl pl-4 pr-20 mt-2 shadow-md focus:border-orange-500"
-                  placeholder="Enter your mood today"
-                />
+                <select
+                  className="w-11/12 h-12 outline-none border-2 rounded-xl pl-2 pr-20 mt-2 shadow-md focus:border-orange-500"
+                  placeholder="What is your mood today?"
+                >
+                  <option value="happy">Happy</option>
+                  <option value="neutral">Neutral</option>
+                  <option value="sad">Sad</option>
+                </select>
                 <button className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold">
                   Send
                 </button>
+                <div className="pt-6">
+                  <p className="font-medium">Step Goal</p>
+                  <input
+                    className="w-11/12 h-12 outline-none border-2 rounded-xl pl-4 pr-4 mt-2 shadow-md focus:border-orange-500"
+                    type="text"
+                    placeholder="Set your step goal"
+                  />
+                  <button className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold">
+                    Send
+                  </button>
+                </div>
               </div>
-              {/* <button
-                type="submit"
-                className="mt-6 rounded-lg w-11/12 h-12 disabled:bg-gray-400 disabled:cursor-not-allowed bg-blue-500 hover:bg-blue-600 transition-colors ease-in-out"
+              <button
+                onClick={() => generateMessage()}
+                className="mt-12 rounded-lg w-11/12 h-12 disabled:bg-gray-400 disabled:cursor-not-allowed bg-blue-500 hover:bg-blue-600 transition-colors ease-in-out"
               >
-                <span className="text-white font-medium">Login</span>
+                <span className="text-white font-medium">
+                  Generate motivational message
+                </span>
               </button>
-              <div className="w-11/12 pt-6 flex justify-center items-center"></div> */}
+              <div className="w-11/12 pt-6 flex justify-center items-center">
+                {result}
+              </div>
             </div>
           </section>
         </div>
