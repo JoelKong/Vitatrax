@@ -181,18 +181,32 @@ void setConnectable(void)
 
 }
 
-void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_data)
-{
-  if (handle == UARTTXCharHandle + 1) {
-    int i;
-    for (i = 0; i < data_length; i++) {
-      ble_rx_buffer[i] = att_data[i];
-    }
-    ble_rx_buffer[i] = '\0';
-    ble_rx_buffer_len = data_length;
-  }
-}
+void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_data) {
 
+  if (data_length == 4) {
+    // Check if the received data consists of digits
+    bool validData = true;
+    for (int i = 0; i < 4; i++) {
+      if (!isdigit(att_data[i])) {
+        validData = false;
+        break;
+      }
+    }
+
+    if (validData && data_length == 4) {
+      // Convert the received text data to the desired format (HH:MM)
+      String receivedStr = String((char *)att_data);
+      String hours = receivedStr.substring(0, 2);
+      String minutes = receivedStr.substring(2, 4);
+
+      // Store the received alarm value in the global variable
+      alarmValueStr = hours + ":" + minutes;
+    }
+  }
+  
+
+
+}
 void GAP_ConnectionComplete_CB(uint8_t addr[6], uint16_t handle) {
 
   connected = TRUE;
