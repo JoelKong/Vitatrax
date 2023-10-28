@@ -1,10 +1,10 @@
-#if BLE_DEBUG
-#include <stdio.h>
-char sprintbuff[100];
-#define PRINTF(...) {sprintf(sprintbuff,__VA_ARGS__);SerialMonitorInterface.print(sprintbuff);}
-#else
-#define PRINTF(...)
-#endif
+// #if BLE_DEBUG
+// #include <stdio.h>
+// char sprintbuff[100];
+// #define PRINTF(...) {sprintf(sprintbuff,__VA_ARGS__);SerialMonitorInterface.print(sprintbuff);}
+// #else
+// #define PRINTF(...)
+// #endif
 
 
 volatile uint8_t set_connectable = 1;
@@ -31,40 +31,40 @@ int BLEsetup() {
 
   ret = aci_hal_write_config_data(CONFIG_DATA_PUBADDR_OFFSET, CONFIG_DATA_PUBADDR_LEN, bdaddr);
 
-  if (ret) {
-    PRINTF("Setting BD_ADDR failed.\n");
-  }
+  // if (ret) {
+  //   PRINTF("Setting BD_ADDR failed.\n");
+  // }
 
   ret = aci_gatt_init();
 
-  if (ret) {
-    PRINTF("GATT_Init failed.\n");
-  }
+  // if (ret) {
+  //   PRINTF("GATT_Init failed.\n");
+  // }
 
   uint16_t service_handle, dev_name_char_handle, appearance_char_handle;
   ret = aci_gap_init_IDB05A1(GAP_PERIPHERAL_ROLE_IDB05A1, 0, 0x07, &service_handle, &dev_name_char_handle, &appearance_char_handle);
 
-  if (ret) {
-    PRINTF("GAP_Init failed.\n");
-  }
+  // if (ret) {
+  //   PRINTF("GAP_Init failed.\n");
+  // }
 
   const char *name = "BlueNRG";
 
   ret = aci_gatt_update_char_value(service_handle, dev_name_char_handle, 0, strlen(name), (uint8_t *)name);
 
-  if (ret) {
-    PRINTF("aci_gatt_update_char_value failed.\n");
-  } else {
-    PRINTF("BLE Stack Initialized.\n");
-  }
+  // if (ret) {
+  //   PRINTF("aci_gatt_update_char_value failed.\n");
+  // } else {
+  //   PRINTF("BLE Stack Initialized.\n");
+  // }
 
   ret = Add_UART_Service();
 
-  if (ret == BLE_STATUS_SUCCESS) {
-    PRINTF("UART service added successfully.\n");
-  } else {
-    PRINTF("Error while adding UART service.\n");
-  }
+  // if (ret == BLE_STATUS_SUCCESS) {
+  //   PRINTF("UART service added successfully.\n");
+  // } else {
+  //   PRINTF("Error while adding UART service.\n");
+  // }
 
   /* +4 dBm output power */
   ret = aci_hal_set_tx_power_level(1, 3);
@@ -119,7 +119,7 @@ uint8_t Add_UART_Service(void)
   return BLE_STATUS_SUCCESS;
 
 fail:
-  PRINTF("Error while adding UART service.\n");
+  // PRINTF("Error while adding UART service.\n");
   return BLE_STATUS_ERROR ;
 
 }
@@ -137,7 +137,7 @@ uint8_t Write_UART_TX(char* TXdata, uint8_t datasize)
   ret = aci_gatt_update_char_value(UARTServHandle, UARTRXCharHandle, 0, datasize, (uint8_t *)TXdata);
 
   if (ret != BLE_STATUS_SUCCESS) {
-    PRINTF("Error while updating UART characteristic.\n") ;
+    // PRINTF("Error while updating UART characteristic.\n") ;
     return BLE_STATUS_ERROR ;
   }
   return BLE_STATUS_SUCCESS;
@@ -169,15 +169,15 @@ void setConnectable(void)
   const char local_name[] = {AD_TYPE_COMPLETE_LOCAL_NAME, 'B', 'l', 'u', 'e', 'N', 'R', 'G'};
 
   hci_le_set_scan_resp_data(0, NULL);
-  PRINTF("General Discoverable Mode.\n");
+  // PRINTF("General Discoverable Mode.\n");
 
   ret = aci_gap_set_discoverable(ADV_IND,
                                  (ADV_INTERVAL_MIN_MS * 1000) / 625, (ADV_INTERVAL_MAX_MS * 1000) / 625,
                                  STATIC_RANDOM_ADDR, NO_WHITE_LIST_USE,
                                  sizeof(local_name), local_name, 0, NULL, 0, 0);
 
-  if (ret != BLE_STATUS_SUCCESS)
-    PRINTF("%d\n", (uint8_t)ret);
+  // if (ret != BLE_STATUS_SUCCESS)
+  //   PRINTF("%d\n", (uint8_t)ret);
 
 }
 
@@ -198,16 +198,16 @@ void GAP_ConnectionComplete_CB(uint8_t addr[6], uint16_t handle) {
   connected = TRUE;
   connection_handle = handle;
 
-  PRINTF("Connected to device:");
-  for (int i = 5; i > 0; i--) {
-    PRINTF("%02X-", addr[i]);
-  }
-  PRINTF("%02X\r\n", addr[0]);
+  // PRINTF("Connected to device:");
+  // for (int i = 5; i > 0; i--) {
+  //   PRINTF("%02X-", addr[i]);
+  // }
+  // PRINTF("%02X\r\n", addr[0]);
 }
 
 void GAP_DisconnectionComplete_CB(void) {
   connected = FALSE;
-  PRINTF("Disconnected\n");
+  // PRINTF("Disconnected\n");
   /* Make the device connectable again. */
   set_connectable = TRUE;
 }
