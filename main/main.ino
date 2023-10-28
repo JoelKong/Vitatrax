@@ -55,6 +55,9 @@ const int amtSamples = 32;
 int aBuff[amtSamples];
 int aBuffPos = 0;
 
+// Mood Indicator Display
+bool faceDisplayed = false;
+
 // Screens
 enum ScreenType {
   ANIMATION_SCREEN,
@@ -320,6 +323,48 @@ int readSteps() {
   return 0;
 }
 
+// Mood Indicator functions
+// Draw circle for the face
+void drawFilledCircle(int x0, int y0, int radius, uint16_t color) {
+  for (int x = -radius; x <= radius; x++) {
+    for (int y = -radius; y <= radius; y++) {
+      if (x * x + y * y <= radius * radius) {
+        display.drawPixel(x0 + x, y0 + y, color);
+      }
+    }
+  }
+}
+
+// Smiley/Neutral/Sad Face
+void drawFace(int x, int y, uint16_t color) {
+  // Face
+  drawFilledCircle(x, y, 10, color);
+
+  // Eyes
+  drawFilledCircle(x - 5, y - 3, 1, 0xFFFF); // Left eye
+  drawFilledCircle(x + 5, y - 3, 1, 0xFFFF); // Right eye
+
+  // Smiley Mouth (Default)
+  display.drawPixel(x - 3, y + 3, 0xFFFF);
+  display.drawPixel(x - 2, y + 4, 0xFFFF);
+  display.drawPixel(x - 1, y + 4, 0xFFFF);
+  display.drawPixel(x, y + 4, 0xFFFF);
+  display.drawPixel(x + 1, y + 4, 0xFFFF);
+  display.drawPixel(x + 2, y + 4, 0xFFFF);
+  display.drawPixel(x + 3, y + 3, 0xFFFF);
+
+  // Neutral Mouth
+  // display.drawLine(x - 2, y + 2, x + 2, y + 2, 0xFFFF);
+
+  // Sad Mouth 
+  // display.drawLine(x - 2, y + 4, x, y + 2, 0xFFFF);
+  // display.drawLine(x, y + 2, x + 2, y + 4, 0xFFFF);
+
+  faceDisplayed = true;
+
+}
+
+
 // Displays main menu
 void displayMenu() {
   readSteps();
@@ -334,6 +379,11 @@ void displayMenu() {
   display.setCursor(5, 45);
   display.print("Prog: ");
   display.print(totalSteps);
+
+  // Draw the Face (Default is Smiley)
+  if (!faceDisplayed) {
+    drawFace(80, 35, TS_8b_Green); 
+  }
 }
 
 
