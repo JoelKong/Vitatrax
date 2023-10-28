@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import supabase from "@/utils/supabase";
 
 export default function Track({ setModal }: any): JSX.Element {
   const [server, setServer] = useState<any>();
@@ -34,6 +35,7 @@ export default function Track({ setModal }: any): JSX.Element {
         type: "pass",
         message: "Successfully Connected to Tiny Circuit",
       });
+      readData();
       setAttemptToConnect(false);
     } catch (error) {
       setModal({
@@ -63,7 +65,7 @@ export default function Track({ setModal }: any): JSX.Element {
   }
 
   // Write to TinyCircuit
-  async function writeToBluetooth(server: any, data: any) {
+  async function writeToBluetooth(server: any, dataValue: any, type: any) {
     setLoading(true);
     try {
       const primaryService = await server.getPrimaryService(id.uartService);
@@ -86,8 +88,19 @@ export default function Track({ setModal }: any): JSX.Element {
 
       // Write data to the RX characteristic
       const encoder = new TextEncoder();
-      const userDescription = encoder.encode(data);
+      const userDescription = encoder.encode(
+        `${data.alarm}_${data.mood}_${data.stepGoal}_${data.weight}`
+      );
       await rxCharacteristic.writeValue(userDescription);
+
+      // Update db
+
+      await supabase
+        .from("settings")
+        .update({ [type]: dataValue })
+        .eq("id", "1")
+        .select();
+
       setModal({
         active: true,
         type: "pass",
@@ -106,6 +119,7 @@ export default function Track({ setModal }: any): JSX.Element {
 
   // Generate motivational message
   async function generateMessage() {
+    setLoading(true);
     const response = await fetch("/api/generate", {
       method: "POST",
       headers: {
@@ -120,11 +134,13 @@ export default function Track({ setModal }: any): JSX.Element {
         type: "fail",
         message: "Something went wrong. Please try again.",
       });
+      setLoading(false);
       return;
     }
 
     const data = response.body;
     if (!data) {
+      setLoading(false);
       return;
     }
 
@@ -141,6 +157,8 @@ export default function Track({ setModal }: any): JSX.Element {
       setResult((prev) => prev + chunkValue);
       outputString += chunkValue;
     }
+
+    setLoading(false);
   }
 
   // Handle input change
@@ -149,6 +167,21 @@ export default function Track({ setModal }: any): JSX.Element {
     const value = e.target.value;
     setData({ ...data, [name]: value });
   }
+
+  // Read from db
+  async function readData() {
+    let { data: settings, error } = await supabase.from("settings").select("*");
+    setData({
+      alarm: settings![0].alarm,
+      mood: settings![0].mood,
+      stepGoal: settings![0].step_goal,
+      weight: settings![0].weight,
+    });
+  }
+
+  useEffect(() => {
+    readData();
+  }, []);
 
   return (
     <>
@@ -245,12 +278,38 @@ export default function Track({ setModal }: any): JSX.Element {
                   placeholder="Set your alarm in 24 hour format e.g 0800"
                 />
                 <button
+                  disabled={loading}
                   onClick={() => {
-                    writeToBluetooth(server, data.alarm);
+                    writeToBluetooth(server, data.alarm, "alarm");
                   }}
-                  className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold"
+                  className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold disabled:cursor-not-allowed disabled:bg-gray-300"
                 >
-                  Send
+                  {loading ? (
+                    <div className="flex flex-row justify-center items-center">
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </div>
+                  ) : (
+                    "Send"
+                  )}
                 </button>
               </div>
               <div className="pt-4">
@@ -267,12 +326,38 @@ export default function Track({ setModal }: any): JSX.Element {
                   <option value="sad">Sad</option>
                 </select>
                 <button
+                  disabled={loading}
                   onClick={() => {
-                    writeToBluetooth(server, data.mood);
+                    writeToBluetooth(server, data.mood, "mood");
                   }}
-                  className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold"
+                  className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold disabled:cursor-not-allowed disabled:bg-gray-300"
                 >
-                  Send
+                  {loading ? (
+                    <div className="flex flex-row justify-center items-center">
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </div>
+                  ) : (
+                    "Send"
+                  )}
                 </button>
                 <div className="pt-6">
                   <p className="font-medium">Step Goal</p>
@@ -285,21 +370,119 @@ export default function Track({ setModal }: any): JSX.Element {
                     onChange={(e) => handleChange(e)}
                   />
                   <button
+                    disabled={loading}
                     onClick={() => {
-                      writeToBluetooth(server, data.stepGoal);
+                      writeToBluetooth(server, data.stepGoal, "step_goal");
                     }}
-                    className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold"
+                    className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold disabled:cursor-not-allowed disabled:bg-gray-300"
                   >
-                    Send
+                    {loading ? (
+                      <div className="flex flex-row justify-center items-center">
+                        <svg
+                          className="animate-spin h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      </div>
+                    ) : (
+                      "Send"
+                    )}
                   </button>
+                  <div className="pt-6">
+                    <p className="font-medium">Weight</p>
+                    <input
+                      className="w-11/12 h-12 outline-none border-2 rounded-xl pl-4 pr-4 mt-2 shadow-md focus:border-orange-500"
+                      type="text"
+                      name="weight"
+                      value={data.weight}
+                      onChange={(e) => handleChange(e)}
+                      placeholder="Set your weight"
+                    />
+                    <button
+                      disabled={loading}
+                      onClick={() => {
+                        writeToBluetooth(server, data.weight, "weight");
+                      }}
+                      className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold disabled:cursor-not-allowed disabled:bg-gray-300"
+                    >
+                      {loading ? (
+                        <div className="flex flex-row justify-center items-center">
+                          <svg
+                            className="animate-spin h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              stroke-width="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                        </div>
+                      ) : (
+                        "Send"
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
               <button
+                disabled={loading}
                 onClick={() => generateMessage()}
                 className="mt-12 rounded-lg w-11/12 h-12 disabled:bg-gray-400 disabled:cursor-not-allowed bg-blue-500 hover:bg-blue-600 transition-colors ease-in-out"
               >
                 <span className="text-white font-medium">
-                  Generate motivational message
+                  {loading ? (
+                    <div className="flex flex-row justify-center items-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <p>Generating...</p>
+                    </div>
+                  ) : (
+                    "Generate Motivational Message"
+                  )}
                 </span>
               </button>
               <div className="w-11/12 pt-6 flex justify-center items-center">
