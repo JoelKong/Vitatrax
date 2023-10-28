@@ -77,9 +77,9 @@ export default function Track({ setModal }: any): JSX.Element {
 
     // Write data to the RX characteristic
     const encoder = new TextEncoder();
-    const userDescription = encoder.encode("hello");
+    const userDescription = encoder.encode("2100");
     await rxCharacteristic.writeValue(userDescription);
-    server.disconnect();
+    // server.disconnect();
   }
 
   // Generate motivational message
@@ -212,7 +212,12 @@ export default function Track({ setModal }: any): JSX.Element {
                   type="text"
                   placeholder="Set your alarm in 24 hour format e.g 0800"
                 />
-                <button className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold">
+                <button
+                  onClick={() => {
+                    writeToBluetooth(server);
+                  }}
+                  className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold"
+                >
                   Send
                 </button>
               </div>

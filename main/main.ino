@@ -146,6 +146,7 @@ void handleButtonPresses() {
 void transitionToMenuScreen() {
   resetStopwatch();
   currentScreen = MENU_SCREEN;
+  faceDisplayed = false;
   drawMenu();
 }
 
@@ -390,6 +391,7 @@ void displayMenu() {
   }
 }
 
+// Alarm
 void updateAlarmValue(String alarmValueStr) {
   // Replace the following with the correct coordinates and text elements
   int alarmX = 5;
