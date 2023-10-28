@@ -59,7 +59,7 @@ int aBuffPos = 0;
 bool faceDisplayed = false;
 
 //Alarm
-String alarmValueStr = "00:00"; 
+String alarmValueStr = "10:00"; 
 
 // Screens
 enum ScreenType {

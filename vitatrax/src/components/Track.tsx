@@ -9,6 +9,13 @@ export default function Track({ setModal }: any): JSX.Element {
     txCharacteristic: "6e400003-b5a3-f393-e0a9-e50e24dcca9e",
   });
   const [result, setResult] = useState<string>("");
+  const [data, setData] = useState({
+    alarm: "1000",
+    mood: "Happy",
+    stepGoal: "10000",
+    weight: "70",
+  });
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Connect to Bluetooth
   async function connectToBluetooth() {
@@ -56,30 +63,45 @@ export default function Track({ setModal }: any): JSX.Element {
   }
 
   // Write to TinyCircuit
-  async function writeToBluetooth(server: any) {
-    const primaryService = await server.getPrimaryService(id.uartService);
-    const rxCharacteristic = await primaryService.getCharacteristic(
-      id.rxCharacteristic
-    );
-    const txCharacteristic = await primaryService.getCharacteristic(
-      id.txCharacteristic
-    );
+  async function writeToBluetooth(server: any, data: any) {
+    setLoading(true);
+    try {
+      const primaryService = await server.getPrimaryService(id.uartService);
+      const rxCharacteristic = await primaryService.getCharacteristic(
+        id.rxCharacteristic
+      );
+      const txCharacteristic = await primaryService.getCharacteristic(
+        id.txCharacteristic
+      );
 
-    // Read data from the TX characteristic (UART data from the peripheral)
-    // txCharacteristic.addEventListener(
-    //   "characteristicvaluechanged",
-    //   (event: any) => {
-    //     const data = event.target.value;
-    //     // Process received data (data.buffer)
-    //   }
-    // );
-    // await txCharacteristic.startNotifications();
+      // Read data from the TX characteristic (UART data from the peripheral)
+      // txCharacteristic.addEventListener(
+      //   "characteristicvaluechanged",
+      //   (event: any) => {
+      //     const data = event.target.value;
+      //     // Process received data (data.buffer)
+      //   }
+      // );
+      // await txCharacteristic.startNotifications();
 
-    // Write data to the RX characteristic
-    const encoder = new TextEncoder();
-    const userDescription = encoder.encode("2100");
-    await rxCharacteristic.writeValue(userDescription);
-    // server.disconnect();
+      // Write data to the RX characteristic
+      const encoder = new TextEncoder();
+      const userDescription = encoder.encode(data);
+      await rxCharacteristic.writeValue(userDescription);
+      setModal({
+        active: true,
+        type: "pass",
+        message: "Successfully updated data!",
+      });
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      setModal({
+        active: true,
+        type: "fail",
+        message: "Something went wrong. Please try again.",
+      });
+    }
   }
 
   // Generate motivational message
@@ -119,6 +141,13 @@ export default function Track({ setModal }: any): JSX.Element {
       setResult((prev) => prev + chunkValue);
       outputString += chunkValue;
     }
+  }
+
+  // Handle input change
+  function handleChange(e: any) {
+    const name = e.target.name;
+    const value = e.target.value;
+    setData({ ...data, [name]: value });
   }
 
   return (
@@ -210,11 +239,14 @@ export default function Track({ setModal }: any): JSX.Element {
                 <input
                   className="w-11/12 h-12 outline-none border-2 rounded-xl pl-4 pr-4 mt-2 shadow-md focus:border-orange-500"
                   type="text"
+                  name="alarm"
+                  value={data.alarm}
+                  onChange={(e) => handleChange(e)}
                   placeholder="Set your alarm in 24 hour format e.g 0800"
                 />
                 <button
                   onClick={() => {
-                    writeToBluetooth(server);
+                    writeToBluetooth(server, data.alarm);
                   }}
                   className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold"
                 >
@@ -226,12 +258,20 @@ export default function Track({ setModal }: any): JSX.Element {
                 <select
                   className="w-11/12 h-12 outline-none border-2 rounded-xl pl-2 pr-20 mt-2 shadow-md focus:border-orange-500"
                   placeholder="What is your mood today?"
+                  name="mood"
+                  value={data.mood}
+                  onChange={(e) => handleChange(e)}
                 >
                   <option value="happy">Happy</option>
                   <option value="neutral">Neutral</option>
                   <option value="sad">Sad</option>
                 </select>
-                <button className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold">
+                <button
+                  onClick={() => {
+                    writeToBluetooth(server, data.mood);
+                  }}
+                  className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold"
+                >
                   Send
                 </button>
                 <div className="pt-6">
@@ -240,8 +280,16 @@ export default function Track({ setModal }: any): JSX.Element {
                     className="w-11/12 h-12 outline-none border-2 rounded-xl pl-4 pr-4 mt-2 shadow-md focus:border-orange-500"
                     type="text"
                     placeholder="Set your step goal"
+                    name="stepGoal"
+                    value={data.stepGoal}
+                    onChange={(e) => handleChange(e)}
                   />
-                  <button className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold">
+                  <button
+                    onClick={() => {
+                      writeToBluetooth(server, data.stepGoal);
+                    }}
+                    className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold"
+                  >
                     Send
                   </button>
                 </div>
