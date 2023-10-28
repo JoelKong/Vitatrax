@@ -61,11 +61,15 @@ bool faceDisplayed = false;
 //Alarm
 String alarmValueStr = "10:00"; 
 
+// Eco
+int weight = 50;
+
 // Screens
 enum ScreenType {
   ANIMATION_SCREEN,
   MENU_SCREEN,
-  TRACKER_SCREEN
+  TRACKER_SCREEN,
+  ECO_SCREEN
 };
 
 ScreenType currentScreen = ANIMATION_SCREEN;
@@ -92,6 +96,9 @@ void loop() {
       break;
     case TRACKER_SCREEN:
       displayStopwatch(); // Update and display the stopwatch
+      break;
+    case ECO_SCREEN:
+      displayEco();
       break;
   }
   
@@ -123,6 +130,8 @@ void handleButtonPresses() {
         } else if (display.getButtons() & TSButtonUpperLeft) {
           transitionToAnimationScreen();
           lastButtonPressTime = currentTime;
+        } else if (display.getButtons() & TSButtonLowerLeft){
+          transitionToEcoScreen();
         }
         break;
       case TRACKER_SCREEN:
@@ -139,6 +148,11 @@ void handleButtonPresses() {
           // Add bluetooth track here
         }
         break;
+      case ECO_SCREEN:
+        if (display.getButtons() & TSButtonUpperLeft) {
+          transitionToMenuScreen();
+          lastButtonPressTime = currentTime;
+        }
     }
   }
 }
@@ -159,6 +173,11 @@ void transitionToAnimationScreen() {
 void transitionToTrackerScreen() {
   currentScreen = TRACKER_SCREEN;
   drawTracker();
+}
+
+void transitionToEcoScreen() {
+  currentScreen = ECO_SCREEN;
+  drawEco();
 }
 
 
@@ -250,14 +269,19 @@ void drawTextBesideArrow(const char* text, int x, int y, uint8_t bg) {
 
 // Second screen
 void drawMenu() {
-  display.clearScreen();
+  if (currentScreen == MENU_SCREEN) {
+    display.clearScreen();
 
-  // This can be expanded for more menu items later on
-  drawLeftArrow(4, 4); // Top-left arrow pointing left
-  drawTextBesideArrow("Log", 14, 3, TS_8b_Black);
+    // This can be expanded for more menu items later on
+    drawLeftArrow(4, 4); // Top-left arrow pointing left
+    drawTextBesideArrow("Log", 14, 3, TS_8b_Black);
 
-  drawRightArrow(88, 54); // Bottom-right arrow
-  drawTextBesideArrow("Go", 70, 53, TS_8b_Black);
+    drawLeftArrow(4, 53); // Bottom-left arrow
+    drawTextBesideArrow("Eco", 14, 52, TS_8b_Black);
+
+    drawRightArrow(88, 54); // Bottom-right arrow
+    drawTextBesideArrow("Go", 70, 53, TS_8b_Black);
+  }
 }
 
 // Steps functions
@@ -374,15 +398,15 @@ void drawFace(int x, int y, uint16_t color) {
 void displayMenu() {
   readSteps();
 
-  display.setCursor(5, 25);
+  display.setCursor(5, 15);
   display.print("Alarm: ");
   display.print(alarmValueStr);
 
-  display.setCursor(5, 35);
+  display.setCursor(5, 25);
   display.print("Goal: ");
   display.print(stepGoal);
 
-  display.setCursor(5, 45);
+  display.setCursor(5, 35);
   display.print("Prog: ");
   display.print(totalSteps);
 
@@ -396,7 +420,7 @@ void displayMenu() {
 void updateAlarmValue(String alarmValueStr) {
   // Replace the following with the correct coordinates and text elements
   int alarmX = 5;
-  int alarmY = 25;
+  int alarmY = 15;
 
   // Clear the section where "Alarm: " is displayed
   clearAlarmSection(alarmX, alarmY, 70, 10, 0x0000);
@@ -526,6 +550,49 @@ double readTemperature() {
   temp = ((accel_sensor.rawTemp * 0.5) + 24.0);
   return temp;
 }
+
+
+// Fourth screen
+void drawEco() {
+  if (currentScreen == ECO_SCREEN) {  // Guard the drawing with a condition to prevent unnecessary redrawing
+    display.clearScreen();
+    drawLeftArrow(4, 4); // Top-left arrow pointing left
+    drawTextBesideArrow("Back", 14, 3, TS_8b_Black);
+  }
+}
+
+
+void displayEco() {
+  display.setCursor(5, 15);
+  display.print("Weight: ");
+  display.print(weight);
+  display.print("kg");
+
+  // Calories of user
+  double calories = 3.9 * weight * 3.5 / 200;
+  // CO2 emission per step
+  double co2_per_step = (calories / 100) * 2.2;
+
+  // Total CO2 emission
+  double total_co2 = totalSteps * co2_per_step;
+  // Trees saved
+  int trees = round((totalSteps * co2_per_step) / 21.77);
+  // Equivalent car miles
+  double car_miles = total_co2 / 2.3;
+
+  display.setCursor(5, 27);
+  display.print(trees);
+  display.print(" trees saved");
+  display.setCursor(5, 37);
+  display.print(total_co2, 1);
+  display.print(" CO2 emissions");
+  display.setCursor(5, 47);
+  display.print("=");
+  display.print(car_miles, 1);
+  display.print("car miles");
+}
+
+
 
 
 
