@@ -178,6 +178,7 @@ void drawInitialScreen() {
   display.drawRect(0, 0, 96, 64, TSRectangleFilled, TS_8b_White);
   drawRightArrow(88, 54); // Bottom-right arrow
   drawTextBesideArrow("Go", 70, 53, TS_8b_White);
+  drawTextBesideArrow("Vitatrax", 26, 8, TS_8b_White);
 }
 
 void displayAnimationScreen() {
@@ -373,9 +374,9 @@ void drawFace(int x, int y, uint16_t color) {
 void displayMenu() {
   readSteps();
 
- display.setCursor(5, 25);
- display.print("Alarm: ");
- display.print(alarmValueStr);
+  display.setCursor(5, 25);
+  display.print("Alarm: ");
+  display.print(alarmValueStr);
 
   display.setCursor(5, 35);
   display.print("Goal: ");
