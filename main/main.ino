@@ -58,6 +58,9 @@ int aBuffPos = 0;
 // Mood Indicator Display
 bool faceDisplayed = false;
 
+//Alarm
+String alarmValueStr = "00:00"; 
+
 // Screens
 enum ScreenType {
   ANIMATION_SCREEN,
@@ -369,8 +372,9 @@ void drawFace(int x, int y, uint16_t color) {
 void displayMenu() {
   readSteps();
 
-  display.setCursor(5, 25);
-  display.print("Alarm: ");
+ display.setCursor(5, 25);
+ display.print("Alarm: ");
+ display.print(alarmValueStr);
 
   display.setCursor(5, 35);
   display.print("Goal: ");
@@ -384,6 +388,48 @@ void displayMenu() {
   if (!faceDisplayed) {
     drawFace(80, 35, TS_8b_Green); 
   }
+}
+
+void updateAlarmValue(String alarmValueStr) {
+  // Replace the following with the correct coordinates and text elements
+  int alarmX = 5;
+  int alarmY = 25;
+
+  // Clear the section where "Alarm: " is displayed
+  clearAlarmSection(alarmX, alarmY, 70, 10, 0x0000);
+
+  // Extract hours and minutes
+  int hours = alarmValueStr.substring(0, 2).toInt();
+  int minutes = alarmValueStr.substring(2, 4).toInt();
+
+  // Format and display the new alarm value as "Alarm: HH:MM"
+  display.setCursor(alarmX, alarmY);
+  display.print("Alarm: ");
+  if (hours < 10) {
+    display.print("0");
+  }
+  display.print(hours);
+  display.print(":");
+  if (minutes < 10) {
+    display.print("0");
+  }
+  display.print(minutes);
+}
+
+void clearAlarmSection(int x, int y, int width, int height, uint16_t backgroundColor) {
+  for (int i = 0; i < height; i++) {
+    for (int j = 0; j < width; j++) {
+      display.drawPixel(x + j, y + i, backgroundColor);
+    }
+  }
+}
+
+void displayPopup(String message) {
+  display.clearScreen();
+  display.setFont(liberationSans_8ptFontInfo);
+  display.setCursor(20, 20);
+  display.print(message);
+  delay(2000);  // Display the message for 2 seconds (adjust as needed)
 }
 
 
