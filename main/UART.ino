@@ -213,14 +213,12 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
         if (codeword == "a") {
           alarm = token;
         } else if (codeword == "b") {
-          stepgoal = intValue;
+          stepprogress = intValue;
         }
         break;
       case 2:
         if (codeword == "a") {
           mood = token;
-        } else if (codeword == "b") {
-          stepprogress = intValue;
         }
         break;
       case 3:
@@ -228,6 +226,11 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
           weightOfPerson = intValue;
         }
         break;
+      case 4:
+         if (codeword == "a") {
+          stepgoal = intValue;
+        }
+        break;     
       default:
         // Handle unexpected tokens or additional tokens
         break;

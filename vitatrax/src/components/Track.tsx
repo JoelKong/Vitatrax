@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import ProgressBar from "./Progressbar";
+import Countdown from "./Countdown";
 import supabase from "@/utils/supabase";
 
 export default function Track({ setModal }: any): JSX.Element {
   const [server, setServer] = useState<any>();
-  const [stepProgress, setStepProgress] = useState<any>({
-    progress: 0,
-    goal: 0,
-  });
+  const [stepProgress, setStepProgress] = useState<any>();
   const [attemptToConnect, setAttemptToConnect] = useState<boolean>(false);
   const [id, setID] = useState<any>({
     uartService: "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
@@ -22,6 +20,39 @@ export default function Track({ setModal }: any): JSX.Element {
     weight: "70",
   });
   const [loading, setLoading] = useState<boolean>(false);
+  const [firstInstance, setFirstInstance] = useState(false);
+  const [currentDate, setCurrentDate] = useState<string>(getCurrentDate());
+
+  // Function to get the current date
+  function getCurrentDate() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  // Check if the date has changed, and reset step progress
+  const checkAndResetStepProgressDate = async () => {
+    let { data: settings, error } = await supabase
+      .from("settings")
+      .select("current_date")
+      .eq("id", "1");
+
+    const currentDateWithoutTimeZone = new Date(settings![0].current_date);
+    const formattedDate = currentDateWithoutTimeZone
+      .toISOString()
+      .split("T")[0];
+
+    if (formattedDate !== currentDate) {
+      setStepProgress({ progress: 0, goal: stepProgress.goal });
+
+      await supabase
+        .from("settings")
+        .update({ current_date: currentDate })
+        .eq("id", "1");
+    }
+  };
 
   // Connect to Bluetooth
   async function connectToBluetooth() {
@@ -38,6 +69,7 @@ export default function Track({ setModal }: any): JSX.Element {
       await readData();
       await readFromBluetooth(serverr);
       await writeToBluetooth(serverr);
+      setFirstInstance(true);
       setModal({
         active: true,
         type: "pass",
@@ -60,6 +92,7 @@ export default function Track({ setModal }: any): JSX.Element {
     try {
       server.disconnect();
       setServer(null);
+      setFirstInstance(false);
       setAttemptToConnect(false);
     } catch (error) {
       setModal({
@@ -84,13 +117,14 @@ export default function Track({ setModal }: any): JSX.Element {
       const encoder1 = new TextEncoder();
       const encoder2 = new TextEncoder();
       const userDescription1 = encoder1.encode(
-        `a_${data.alarm}_${data.mood}_${data.weight}`
+        `a_${data.alarm}_${data.mood}_${data.weight}_${data.stepGoal}`
       );
-      const userDescription2 = encoder2.encode(
-        `b_${data.stepGoal}_${stepProgress.progress}`
-      );
+      const userDescription2 = encoder2.encode(`b_${stepProgress.progress}`);
+
       await rxCharacteristic.writeValue(userDescription1);
-      await rxCharacteristic.writeValue(userDescription2);
+      if (!firstInstance) {
+        await rxCharacteristic.writeValue(userDescription2);
+      }
 
       // Update db
       await supabase
@@ -236,6 +270,12 @@ export default function Track({ setModal }: any): JSX.Element {
   useEffect(() => {
     readData();
 
+    const checkDate = setInterval(() => {
+      const currentDateNow = getCurrentDate();
+      setCurrentDate(currentDateNow);
+      checkAndResetStepProgressDate();
+    }, 5000);
+
     const settings = supabase
       .channel("custom-update-channel")
       .on(
@@ -251,23 +291,26 @@ export default function Track({ setModal }: any): JSX.Element {
       .subscribe();
 
     return () => {
+      clearInterval(checkDate);
       settings.unsubscribe();
     };
   }, []);
 
   useEffect(() => {
+    updateSupabaseWithProgress();
     // Send updates to progress
-    const updateInterval = setInterval(() => {
-      updateSupabaseWithProgress();
-    }, 5000);
-    return () => {
-      clearInterval(updateInterval);
-    };
+    // const updateInterval = setInterval(() => {
+    //   updateSupabaseWithProgress();
+    // }, 5000);
+    // return () => {
+    //   clearInterval(updateInterval);
+    // };
   }, [stepProgress]);
 
   return (
     <>
-      <div className="w-full flex justify-center pt-4">
+      <div className="w-full flex flex-col items-center justify-center">
+        <Countdown currentDate={currentDate} />
         {server ? (
           <button
             className="bg-blue-300 w-11/12 lg:w-1/4 h-12 rounded-2xl font-medium text-xl tracking-widest hover:bg-blue-400 disabled:cursor-not-allowed"
