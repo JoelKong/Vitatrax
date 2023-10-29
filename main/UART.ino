@@ -190,6 +190,7 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
   String mood;
   int stepgoal;
   int weightOfPerson;
+  int stepprogress;
   faceDisplayed = false; // To loop mood indicator when new input
 
   // Use strtok to tokenize the string using the "_" separator
@@ -214,6 +215,9 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
       case 3:
         weightOfPerson = intValue;
         break;
+      case 4:
+        stepprogress = intValue;
+        break;
       default:
         // Handle unexpected tokens or additional tokens
         break;
@@ -237,6 +241,8 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
   String hours = alarm.substring(0, 2);
   String minutes = alarm.substring(2, 4);
   alarmValueStr = hours + ":" + minutes;
+
+  // Handle for step progress
 
   // if (data_length == 4) {
   //   // Check if the received data consists of digits

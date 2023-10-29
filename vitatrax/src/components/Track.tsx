@@ -36,8 +36,8 @@ export default function Track({ setModal }: any): JSX.Element {
       const serverr = await device.gatt.connect();
       setServer(serverr);
       await readData();
-      await writeToBluetooth(serverr);
       await readFromBluetooth(serverr);
+      await writeToBluetooth(serverr);
       setModal({
         active: true,
         type: "pass",
@@ -79,14 +79,11 @@ export default function Track({ setModal }: any): JSX.Element {
       const rxCharacteristic = await primaryService.getCharacteristic(
         id.rxCharacteristic
       );
-      const txCharacteristic = await primaryService.getCharacteristic(
-        id.txCharacteristic
-      );
 
       // Write data to the RX characteristic
       const encoder = new TextEncoder();
       const userDescription = encoder.encode(
-        `${data.alarm}_${data.mood}_${data.stepGoal}_${data.weight}`
+        `${data.alarm}_${data.mood}_${data.stepGoal}_${data.weight}_${stepProgress.progress}`
       );
       await rxCharacteristic.writeValue(userDescription);
 
@@ -109,7 +106,6 @@ export default function Track({ setModal }: any): JSX.Element {
       });
       setLoading(false);
     } catch (error) {
-      console.log(`${data.alarm}_${data.mood}_${data.stepGoal}_${data.weight}`);
       console.log(error);
       setLoading(false);
       setModal({
@@ -133,10 +129,11 @@ export default function Track({ setModal }: any): JSX.Element {
         "characteristicvaluechanged",
         (event: any) => {
           const data = event.target.value;
-          const newProgress = parseInt(data, 10);
+          const receivedData = new TextDecoder().decode(data);
+          const intValue = parseInt(receivedData, 10);
           setStepProgress((prevStepProgress: any) => ({
             ...prevStepProgress,
-            progress: newProgress,
+            progress: prevStepProgress.progress + intValue,
           }));
         }
       );
@@ -240,7 +237,6 @@ export default function Track({ setModal }: any): JSX.Element {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "settings" },
         (payload) => {
-          console.log("Change received!", payload);
           setStepProgress((prevStepProgress: any) => ({
             ...prevStepProgress,
             goal: payload.new.step_goal,
@@ -249,16 +245,20 @@ export default function Track({ setModal }: any): JSX.Element {
       )
       .subscribe();
 
+    return () => {
+      settings.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
     // Send updates to progress
     const updateInterval = setInterval(() => {
       updateSupabaseWithProgress();
     }, 5000);
-
     return () => {
       clearInterval(updateInterval);
-      settings.unsubscribe();
     };
-  }, []);
+  }, [stepProgress]);
 
   return (
     <>
