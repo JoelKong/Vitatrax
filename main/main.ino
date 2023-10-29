@@ -41,6 +41,8 @@ unsigned long lastButtonPressTime = 0;
 bool stopwatchRunning = false;
 unsigned long stopwatchStartTime = 0;
 unsigned long elapsedMillis = 0;
+int minutes = 0;
+int seconds = 0;
 
 // Step count variables
 int stepGoal = 500;
@@ -156,6 +158,9 @@ void handleButtonPresses() {
           lastButtonPressTime = currentTime;
         } else if (display.getButtons() & TSButtonUpperRight) {
           // Add bluetooth track here
+          char time[20];
+          snprintf(time, sizeof(time), "%d:%d", minutes, seconds);
+          lib_aci_send_data(0, (uint8_t*)time, strlen(time));
         }
         break;
       case ECO_SCREEN:
@@ -505,8 +510,13 @@ void drawTracker() {
       drawTextBesideArrow("Start", 58, 52, TS_8b_Black);
     }
     // Display Progress Bar
-    displayProgressBar(totalSteps,stepGoal);
+    displayProgressBar(totalSteps, stepGoal);
   }
+}
+
+void refreshTracker(int prevFilledWidth){
+  // display.clearScreen();
+  drawTracker();
 }
 
 // Stopwatch Functions
@@ -536,8 +546,8 @@ void displayStopwatch() {
   }
 
   int elapsedSeconds = elapsedMillis / 1000;
-  int minutes = elapsedSeconds / 60;
-  int seconds = elapsedSeconds % 60;
+  minutes = elapsedSeconds / 60;
+  seconds = elapsedSeconds % 60;
 
   display.setCursor(40, 16); // Adjust these values to position the stopwatch in the middle of the screen
   display.print(minutes);
