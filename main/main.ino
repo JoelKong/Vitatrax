@@ -5,6 +5,8 @@
 #include <STBLE.h>
 #include "BMA250.h"
 #include "sprites.h"
+#include <RTCZero.h>
+RTCZero rtc;
 
 // Initialise bluetooth
 // #ifndef BLE_DEBUG
@@ -74,6 +76,15 @@ unsigned long lastUpdateMillis = 0; // Store the last time the progress bar was 
 // Eco
 int weight = 70;
 
+//Time
+const byte time_hours = 13;
+const byte time_minutes = 51;
+const byte time_seconds = 0;
+
+// Batt
+float getBattPercent();
+int batteryPercentage = getBattPercent();
+
 // Screens
 enum ScreenType {
   ANIMATION_SCREEN,
@@ -89,6 +100,9 @@ void setup() {
   initializeDisplay();
   initializeAccel();
   drawInitialScreen();
+  
+  rtc.begin();
+  rtc.setTime(time_hours, time_minutes, time_seconds);
 
   BLEsetup();
 }
@@ -100,6 +114,8 @@ void loop() {
   switch (currentScreen) {
     case ANIMATION_SCREEN:
       displayAnimationScreen();
+      drawBatterySymbol(display, 14, 1, batteryPercentage);
+      displayTime();
       break;
     case MENU_SCREEN:
       // Displays menu
@@ -701,6 +717,79 @@ void refreshEcoScreen(int weight){
   displayEco();
 }
 
+void display2digits(int number) {
+  if (number < 10) {
+    display.print("0");
+  }
+  display.print(number);
+}
+
+void displayTime() {
+  display.setFont(liberationSans_8ptFontInfo); // Choose a font size
+  display.setCursor(50, 0); // Set the cursor position
+  display2digits(rtc.getHours());
+  display.print(":");
+  display2digits(rtc.getMinutes());
+}
+
+float getVCC() {
+  SYSCTRL->VREF.reg |= SYSCTRL_VREF_BGOUTEN;
+  while (ADC->STATUS.bit.SYNCBUSY == 1);
+  ADC->SAMPCTRL.bit.SAMPLEN = 0x1;
+  while (ADC->STATUS.bit.SYNCBUSY == 1);
+  ADC->INPUTCTRL.bit.MUXPOS = 0x19;         // Internal bandgap input
+  while (ADC->STATUS.bit.SYNCBUSY == 1);
+  ADC->CTRLA.bit.ENABLE = 0x01;             // Enable ADC
+  while (ADC->STATUS.bit.SYNCBUSY == 1);
+  ADC->SWTRIG.bit.START = 1;  // Start conversion
+  ADC->INTFLAG.bit.RESRDY = 1;  // Clear the Data Ready flag
+  while (ADC->STATUS.bit.SYNCBUSY == 1);
+  ADC->SWTRIG.bit.START = 1;  // Start the conversion again to throw out first value
+  while ( ADC->INTFLAG.bit.RESRDY == 0 );   // Waiting for conversion to complete
+  uint32_t valueRead = ADC->RESULT.reg;
+  while (ADC->STATUS.bit.SYNCBUSY == 1);
+  ADC->CTRLA.bit.ENABLE = 0x00;             // Disable ADC
+  while (ADC->STATUS.bit.SYNCBUSY == 1);
+  SYSCTRL->VREF.reg &= ~SYSCTRL_VREF_BGOUTEN;
+  float vcc = (1.1 * 1023.0) / valueRead;
+  return vcc;
+}
+// Calculate the battery voltage
+float getBattVoltage(void) {
+  const int VBATTpin = A4;
+  float VCC = getVCC();
+
+  // Use resistor division and math to get the voltage
+  float resistorDiv = 0.5;
+  float ADCres = 1023.0;
+  float battVoltageReading = analogRead(VBATTpin);
+  battVoltageReading = analogRead(VBATTpin); // Throw out first value
+  float battVoltage = VCC * battVoltageReading / ADCres / resistorDiv;
+
+  return battVoltage;
+}
+
+// Calculate the battery voltage
+float getBattPercent()
+{
+  float batteryLeft = max((getBattVoltage() - 3.00), 0);
+  return min((batteryLeft * 83.333333), 100); // hard upper limit of 100 as it often shows over 100 when charging
+}
+
+void drawBatterySymbol(TinyScreen &display, uint8_t x, uint8_t y, int percentage) {
+    // Draw battery outline
+    // x-axis, y-axis, length, height, fill, color 
+    display.drawRect(x + 67, y - 1, 13, 10, 1, TS_8b_Green);
+    // Draw battery terminal
+    display.drawRect(x + 80, y + 1, 2, 4, 1, TS_8b_Green);
+    
+    // Calculate filled rectangle width based on percentage
+    uint8_t fillWidth = 11 * percentage / 100;
+
+    // Draw filled rectangle using drawRect in a loop
+    display.drawRect(x + 68, y , fillWidth, 8, 1, TS_8b_Red);
+
+}
 
 
 
