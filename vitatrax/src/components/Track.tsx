@@ -33,11 +33,11 @@ export default function Track({ setModal }: any): JSX.Element {
         optionalServices: [id.uartService],
       });
 
-      const server = await device.gatt.connect();
-      setServer(server);
+      const serverr = await device.gatt.connect();
+      setServer(serverr);
       await readData();
-      await writeToBluetooth(server);
-      await readFromBluetooth(server);
+      await writeToBluetooth(serverr);
+      await readFromBluetooth(serverr);
       setModal({
         active: true,
         type: "pass",
