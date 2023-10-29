@@ -183,26 +183,78 @@ void setConnectable(void)
 
 void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_data) {
 
-  if (data_length == 4) {
-    // Check if the received data consists of digits
-    bool validData = true;
-    for (int i = 0; i < 4; i++) {
-      if (!isdigit(att_data[i])) {
-        validData = false;
+  String receivedStr = String((char *)att_data);
+
+    // Initialize variables to store the separated values
+  String alarm;
+  String mood;
+  int stepgoal;
+  int weightOfPerson;
+
+  // Use strtok to tokenize the string using the "_" separator
+  char *token = strtok((char *)receivedStr.c_str(), "_");
+
+  // Keep track of the token position
+  int tokenPosition = 0;
+
+  while (token != NULL) {
+    int intValue = atoi(token);
+    // Store each token in the corresponding variable based on its position
+    switch (tokenPosition) {
+      case 0:
+        alarm = token;
         break;
-      }
+      case 1:
+        mood = token;
+        break;
+      case 2:
+        stepgoal = intValue;
+        break;
+      case 3:
+        weightOfPerson = intValue;
+        break;
+      default:
+        // Handle unexpected tokens or additional tokens
+        break;
     }
 
-    if (validData && data_length == 4) {
-      // Convert the received text data to the desired format (HH:MM)
-      String receivedStr = String((char *)att_data);
-      String hours = receivedStr.substring(0, 2);
-      String minutes = receivedStr.substring(2, 4);
-
-      // Store the received alarm value in the global variable
-      alarmValueStr = hours + ":" + minutes;
-    }
+    // Get the next token
+    token = strtok(NULL, "_");
+    tokenPosition++;
   }
+
+  // Handle for mood
+  faceType = mood;
+
+  // Handle for stepgoal
+
+  // Handle for weight
+
+  // Handle for alarm
+  String hours = alarm.substring(0, 2);
+  String minutes = alarm.substring(2, 4);
+  alarmValueStr = hours + ":" + minutes;
+
+  // if (data_length == 4) {
+  //   // Check if the received data consists of digits
+  //   bool validData = true;
+  //   for (int i = 0; i < 4; i++) {
+  //     if (!isdigit(alarm)) {
+  //       validData = false;
+  //       break;
+  //     }
+  //   }
+
+  //   if (validData && data_length == 4) {
+  //     // Convert the received text data to the desired format (HH:MM)
+  //     String receivedStr = String((char *)alarm);
+  //     String hours = receivedStr.substring(0, 2);
+  //     String minutes = receivedStr.substring(2, 4);
+
+  //     // Store the received alarm value in the global variable
+  //     alarmValueStr = hours + ":" + minutes;
+  //   }
+  // }
   
 
 

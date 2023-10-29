@@ -43,7 +43,7 @@ unsigned long stopwatchStartTime = 0;
 unsigned long elapsedMillis = 0;
 
 // Step count variables
-int stepGoal = 1000;
+int stepGoal = 10000;
 bool validStep = false;
 int newSample = 0;
 int oldSample = 0;
@@ -57,12 +57,14 @@ int aBuffPos = 0;
 
 // Mood Indicator Display
 bool faceDisplayed = false;
+String faceType = "h";
+
 
 //Alarm
 String alarmValueStr = "10:00"; 
 
 // Eco
-int weight = 50;
+int weight = 70;
 
 // Screens
 enum ScreenType {
@@ -374,20 +376,23 @@ void drawFace(int x, int y, uint16_t color) {
   drawFilledCircle(x + 5, y - 3, 1, 0xFFFF); // Right eye
 
   // Smiley Mouth (Default)
-  display.drawPixel(x - 3, y + 3, 0xFFFF);
-  display.drawPixel(x - 2, y + 4, 0xFFFF);
-  display.drawPixel(x - 1, y + 4, 0xFFFF);
-  display.drawPixel(x, y + 4, 0xFFFF);
-  display.drawPixel(x + 1, y + 4, 0xFFFF);
-  display.drawPixel(x + 2, y + 4, 0xFFFF);
-  display.drawPixel(x + 3, y + 3, 0xFFFF);
+  if (faceType == "h") {
+    display.drawPixel(x - 3, y + 3, 0xFFFF);
+    display.drawPixel(x - 2, y + 4, 0xFFFF);
+    display.drawPixel(x - 1, y + 4, 0xFFFF);
+    display.drawPixel(x, y + 4, 0xFFFF);
+    display.drawPixel(x + 1, y + 4, 0xFFFF);
+    display.drawPixel(x + 2, y + 4, 0xFFFF);
+    display.drawPixel(x + 3, y + 3, 0xFFFF);
+  } else if (faceType == "n") {
+    // Neutral Mouth
+    display.drawLine(x - 2, y + 2, x + 2, y + 2, 0xFFFF);
+  } else if (faceType == "s") {
+    // Sad Mouth 
+    display.drawLine(x - 2, y + 4, x, y + 2, 0xFFFF);
+    display.drawLine(x, y + 2, x + 2, y + 4, 0xFFFF);
+  }
 
-  // Neutral Mouth
-  // display.drawLine(x - 2, y + 2, x + 2, y + 2, 0xFFFF);
-
-  // Sad Mouth 
-  // display.drawLine(x - 2, y + 4, x, y + 2, 0xFFFF);
-  // display.drawLine(x, y + 2, x + 2, y + 4, 0xFFFF);
 
   faceDisplayed = true;
 

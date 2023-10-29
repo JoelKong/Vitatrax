@@ -6,5 +6,8 @@ extern uint16_t UARTTXCharHandle;
 extern uint16_t UARTRXCharHandle;
 
 extern int alarmValue; // Declare alarmValue as a global variable
+extern String faceType;
+extern int stepGoal;
+extern int weight;
 
 #endif

@@ -12,7 +12,7 @@ export default function Track({ setModal }: any): JSX.Element {
   const [result, setResult] = useState<string>("");
   const [data, setData] = useState({
     alarm: "1000",
-    mood: "Happy",
+    mood: "h",
     stepGoal: "10000",
     weight: "70",
   });
@@ -108,6 +108,8 @@ export default function Track({ setModal }: any): JSX.Element {
       });
       setLoading(false);
     } catch (error) {
+      console.log(`${data.alarm}_${data.mood}_${data.stepGoal}_${data.weight}`);
+      console.log(error);
       setLoading(false);
       setModal({
         active: true,
@@ -321,9 +323,9 @@ export default function Track({ setModal }: any): JSX.Element {
                   value={data.mood}
                   onChange={(e) => handleChange(e)}
                 >
-                  <option value="happy">Happy</option>
-                  <option value="neutral">Neutral</option>
-                  <option value="sad">Sad</option>
+                  <option value="h">Happy</option>
+                  <option value="n">Neutral</option>
+                  <option value="s">Sad</option>
                 </select>
                 <button
                   disabled={loading}
