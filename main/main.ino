@@ -43,7 +43,7 @@ unsigned long stopwatchStartTime = 0;
 unsigned long elapsedMillis = 0;
 
 // Step count variables
-int stepGoal = 10000;
+int stepGoal = 500;
 bool validStep = false;
 int newSample = 0;
 int oldSample = 0;
@@ -87,6 +87,7 @@ void setup() {
 
 void loop() {
   aci_loop();//Process any ACI commands or events from the NRF8001- main BLE handler, must run often. Keep main loop short.
+  readSteps();
 
   switch (currentScreen) {
     case ANIMATION_SCREEN:
@@ -393,16 +394,11 @@ void drawFace(int x, int y, uint16_t color) {
     display.drawLine(x, y + 2, x + 2, y + 4, 0xFFFF);
   }
 
-
-  faceDisplayed = true;
-
 }
 
 
 // Displays main menu
 void displayMenu() {
-  readSteps();
-
   display.setCursor(5, 15);
   display.print("Alarm: ");
   display.print(alarmValueStr);
@@ -418,37 +414,45 @@ void displayMenu() {
   // Draw the Face (Default is Smiley)
   if (!faceDisplayed) {
     drawFace(80, 35, TS_8b_Green); 
+    faceDisplayed = true;
   }
 }
 
 // Alarm
-void updateAlarmValue(String alarmValueStr) {
+// void updateAlarmValue(String alarmValueStr) {
   // Replace the following with the correct coordinates and text elements
-  int alarmX = 5;
-  int alarmY = 15;
+  // int alarmX = 5;
+  // int alarmY = 15;
 
   // Clear the section where "Alarm: " is displayed
-  clearAlarmSection(alarmX, alarmY, 70, 10, 0x0000);
+  // clearSection(alarmX, alarmY, 70, 10, 0x0000);
 
   // Extract hours and minutes
-  int hours = alarmValueStr.substring(0, 2).toInt();
-  int minutes = alarmValueStr.substring(2, 4).toInt();
+  // int hours = alarmValueStr.substring(0, 2).toInt();
+  // int minutes = alarmValueStr.substring(2, 4).toInt();
 
   // Format and display the new alarm value as "Alarm: HH:MM"
-  display.setCursor(alarmX, alarmY);
-  display.print("Alarm: ");
-  if (hours < 10) {
-    display.print("0");
-  }
-  display.print(hours);
-  display.print(":");
-  if (minutes < 10) {
-    display.print("0");
-  }
-  display.print(minutes);
+  // display.setCursor(alarmX, alarmY);
+  // display.print("Alarm: ");
+  // if (hours < 10) {
+  //   display.print("0");
+  // }
+  // display.print(hours);
+  // display.print(":");
+  // if (minutes < 10) {
+  //   display.print("0");
+  // }
+  // display.print(minutes);
+// }
+
+void refreshMenuScreen(String alarmValueStr, int stepGoal, String faceType) {
+  display.clearScreen();
+  // To redraw face
+  faceDisplayed = false;
+  displayMenu();
 }
 
-void clearAlarmSection(int x, int y, int width, int height, uint16_t backgroundColor) {
+void clearSection(int x, int y, int width, int height, uint16_t backgroundColor) {
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
       display.drawPixel(x + j, y + i, backgroundColor);
@@ -595,6 +599,11 @@ void displayEco() {
   display.print("=");
   display.print(car_miles, 1);
   display.print("car miles");
+}
+
+void refreshEcoScreen(int weight){
+  display.clearScreen();
+  displayEco();
 }
 
 
