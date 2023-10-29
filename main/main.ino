@@ -120,6 +120,8 @@ void loop() {
     case MENU_SCREEN:
       // Displays menu
       displayMenu();
+      drawBatterySymbol(display, 14, 1, batteryPercentage);
+      displayTime();
       break;
     case TRACKER_SCREEN:
       displayStopwatch(); // Update and display the stopwatch
@@ -127,6 +129,8 @@ void loop() {
       break;
     case ECO_SCREEN:
       displayEco();
+      drawBatterySymbol(display, 14, 1, batteryPercentage);
+      displayTime();
       break;
   }
   
