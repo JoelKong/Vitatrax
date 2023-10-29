@@ -514,6 +514,11 @@ void drawTracker() {
   }
 }
 
+void refreshTracker(int prevFilledWidth){
+  // display.clearScreen();
+  drawTracker();
+}
+
 // Stopwatch Functions
 void startStopwatch() {
   stopwatchStartTime = millis();

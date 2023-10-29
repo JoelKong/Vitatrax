@@ -11,4 +11,5 @@ extern int stepGoal;
 extern int weight;
 extern int totalSteps;
 
+
 #endif
