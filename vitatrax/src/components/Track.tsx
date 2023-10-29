@@ -166,14 +166,21 @@ export default function Track({ setModal }: any): JSX.Element {
       // Read data from the TX characteristic (UART data from the peripheral)
       txCharacteristic.addEventListener(
         "characteristicvaluechanged",
-        (event: any) => {
+        async (event: any) => {
           const data = event.target.value;
           const receivedData = new TextDecoder().decode(data);
           const intValue = parseInt(receivedData, 10);
-          setStepProgress((prevStepProgress: any) => ({
-            ...prevStepProgress,
-            progress: prevStepProgress.progress + intValue,
-          }));
+          if (intValue === 1) {
+            setStepProgress((prevStepProgress: any) => ({
+              ...prevStepProgress,
+              progress: prevStepProgress.progress + intValue,
+            }));
+          } else {
+            await supabase
+              .from("timings")
+              .insert([{ timing: receivedData }])
+              .select();
+          }
         }
       );
       await txCharacteristic.startNotifications();
@@ -273,6 +280,7 @@ export default function Track({ setModal }: any): JSX.Element {
     const checkDate = setInterval(() => {
       const currentDateNow = getCurrentDate();
       setCurrentDate(currentDateNow);
+      console.log(currentDate);
       checkAndResetStepProgressDate();
     }, 5000);
 
@@ -298,13 +306,6 @@ export default function Track({ setModal }: any): JSX.Element {
 
   useEffect(() => {
     updateSupabaseWithProgress();
-    // Send updates to progress
-    // const updateInterval = setInterval(() => {
-    //   updateSupabaseWithProgress();
-    // }, 5000);
-    // return () => {
-    //   clearInterval(updateInterval);
-    // };
   }, [stepProgress]);
 
   return (
