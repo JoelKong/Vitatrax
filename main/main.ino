@@ -343,6 +343,8 @@ int readSteps() {
       lastStepTime = millis();
       if (newStep) {
         totalSteps++;
+        char data[] = "1";
+        lib_aci_send_data(0, (uint8_t*)data, strlen(data));
       }
     }
   }
