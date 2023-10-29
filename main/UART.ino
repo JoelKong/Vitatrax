@@ -227,8 +227,10 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
   faceType = mood;
 
   // Handle for stepgoal
+  stepGoal = stepgoal;
 
   // Handle for weight
+  weight = weightOfPerson;
 
   // Handle for alarm
   String hours = alarm.substring(0, 2);
