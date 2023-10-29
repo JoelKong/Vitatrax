@@ -185,11 +185,12 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
 
   String receivedStr = String((char *)att_data);
 
-    // Initialize variables to store the separated values
+  // Initialize variables to store the separated values
   String alarm;
   String mood;
   int stepgoal;
   int weightOfPerson;
+  faceDisplayed = false; // To loop mood indicator when new input
 
   // Use strtok to tokenize the string using the "_" separator
   char *token = strtok((char *)receivedStr.c_str(), "_");

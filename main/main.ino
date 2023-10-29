@@ -59,9 +59,15 @@ int aBuffPos = 0;
 bool faceDisplayed = false;
 String faceType = "h";
 
-
 //Alarm
 String alarmValueStr = "10:00"; 
+
+// Progress bar variables
+unsigned long previousMillis = 0;
+const unsigned long progressUpdateInterval = 3000; // Interval for updating the progress bar (3 seconds)
+int prevFilledWidth = 0; // Store the previous filled width of the progress bar
+bool goalReached = false; // Flag to indicate if the goal has been reached
+unsigned long lastUpdateMillis = 0; // Store the last time the progress bar was updated
 
 // Eco
 int weight = 70;
@@ -99,6 +105,7 @@ void loop() {
       break;
     case TRACKER_SCREEN:
       displayStopwatch(); // Update and display the stopwatch
+      checkForSteps();
       break;
     case ECO_SCREEN:
       displayEco();
@@ -145,8 +152,8 @@ void handleButtonPresses() {
           toggleStopwatch();  // Toggle the stopwatch when the bottom right button is pressed
           lastButtonPressTime = currentTime;
         } else if (display.getButtons() & TSButtonLowerLeft) {
-            resetStopwatch();  // Reset the stopwatch when the bottom left button is pressed
-            lastButtonPressTime = currentTime;
+          resetStopwatch();  // Reset the stopwatch when the bottom left button is pressed
+          lastButtonPressTime = currentTime;
         } else if (display.getButtons() & TSButtonUpperRight) {
           // Add bluetooth track here
         }
@@ -497,6 +504,8 @@ void drawTracker() {
       drawRightArrow(88, 53); // Adjusted to move the arrow a bit to the right
       drawTextBesideArrow("Start", 58, 52, TS_8b_Black);
     }
+    // Display Progress Bar
+    displayProgressBar(totalSteps,stepGoal);
   }
 }
 
@@ -517,7 +526,7 @@ void resetStopwatch() {
   if (stopwatchRunning) {
     stopwatchStartTime = millis();
   }
-  drawTracker();
+  // drawTracker();
 }
 
 void displayStopwatch() {
@@ -562,6 +571,80 @@ double readTemperature() {
   return temp;
 }
 
+// Progress bar Function
+void displayProgressBar(int totalSteps, int stepGoal) {
+  unsigned long currentMillis = millis();
+
+  // Always draw the progress bar
+  int barWidth = 80;
+  int barHeight = 10;
+  int xPos = (96 - barWidth) / 2;
+  int yPos = 28;
+
+  double progress = (double)totalSteps / stepGoal;
+
+  // Limit the filled width to match the stepGoal
+  int filledWidth = min(barWidth, static_cast<int>(barWidth * progress));
+
+  // Determine the progress bar color based on goal completion
+  uint16_t progressBarColor = (totalSteps >= stepGoal) ? TS_8b_Green : TS_8b_Red;
+
+/*
+  // Clear the previous progress
+  for (int x = xPos; x < xPos + prevFilledWidth; x++) {
+    for (int y = yPos; y < yPos + barHeight; y++) {
+      display.drawPixel(x, y, TS_8b_Black);
+    }
+  }
+*/
+  // Draw the filled part of the progress bar
+  for (int x = xPos; x < xPos + filledWidth; x++) {
+    for (int y = yPos; y < yPos + barHeight; y++) {
+      display.drawPixel(x, y, progressBarColor);
+    }
+  }
+
+  // Draw the border of the progress bar in white
+  for (int x = xPos - 1; x < xPos + barWidth + 2; x++) {
+    display.drawPixel(x, yPos - 1, TS_8b_White);  // Top border
+    display.drawPixel(x, yPos + barHeight, TS_8b_White);  // Bottom border
+  }
+
+  for (int y = yPos - 1; y < yPos + barHeight + 1; y++) {
+    display.drawPixel(xPos - 1, y, TS_8b_White);  // Left border
+    display.drawPixel(xPos + barWidth, y, TS_8b_White);  // Right border
+  }
+
+  prevFilledWidth = filledWidth;
+
+  // Check if the goal has been reached
+  if (totalSteps >= stepGoal) {
+    goalReached = true;
+  }
+
+  // Update the last update time, but only if the time interval has passed
+  if (currentMillis - lastUpdateMillis >= progressUpdateInterval) {
+    lastUpdateMillis = currentMillis;
+  }
+  /* For troubleshooting
+  // Update the live text in real-time
+  display.fontColor(TS_8b_Green, TS_8b_Black);
+  display.setCursor(15, 30);
+  display.print("Prog: ");
+  display.print(totalSteps);
+  display.print(" / ");
+  display.print(stepGoal);
+  */
+}
+  
+// Function to check for steps and update totalSteps
+void checkForSteps() {
+  int stepDetected = readSteps(); // This function checks for steps and returns 1 if a step is detected
+
+  if (stepDetected) {
+    displayProgressBar(totalSteps, stepGoal); // Update the progress bar with the new totalSteps
+  }
+}
 
 // Fourth screen
 void drawEco() {
