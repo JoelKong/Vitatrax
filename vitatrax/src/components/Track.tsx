@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
+import ProgressBar from "./Progressbar";
 import supabase from "@/utils/supabase";
 
 export default function Track({ setModal }: any): JSX.Element {
   const [server, setServer] = useState<any>();
+  const [stepProgress, setStepProgress] = useState<any>({
+    progress: 0,
+    goal: 0,
+  });
   const [attemptToConnect, setAttemptToConnect] = useState<boolean>(false);
   const [id, setID] = useState<any>({
     uartService: "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
@@ -30,12 +35,13 @@ export default function Track({ setModal }: any): JSX.Element {
 
       const server = await device.gatt.connect();
       setServer(server);
+      await readData();
+      writeToBluetooth(server);
       setModal({
         active: true,
         type: "pass",
         message: "Successfully Connected to Tiny Circuit",
       });
-      readData();
       setAttemptToConnect(false);
     } catch (error) {
       setModal({
@@ -65,7 +71,7 @@ export default function Track({ setModal }: any): JSX.Element {
   }
 
   // Write to TinyCircuit
-  async function writeToBluetooth(server: any, dataValue: any, type: any) {
+  async function writeToBluetooth(server: any) {
     setLoading(true);
     try {
       const primaryService = await server.getPrimaryService(id.uartService);
@@ -76,16 +82,6 @@ export default function Track({ setModal }: any): JSX.Element {
         id.txCharacteristic
       );
 
-      // Read data from the TX characteristic (UART data from the peripheral)
-      // txCharacteristic.addEventListener(
-      //   "characteristicvaluechanged",
-      //   (event: any) => {
-      //     const data = event.target.value;
-      //     // Process received data (data.buffer)
-      //   }
-      // );
-      // await txCharacteristic.startNotifications();
-
       // Write data to the RX characteristic
       const encoder = new TextEncoder();
       const userDescription = encoder.encode(
@@ -94,10 +90,14 @@ export default function Track({ setModal }: any): JSX.Element {
       await rxCharacteristic.writeValue(userDescription);
 
       // Update db
-
       await supabase
         .from("settings")
-        .update({ [type]: dataValue })
+        .update({
+          alarm: data.alarm,
+          mood: data.mood,
+          step_goal: data.stepGoal,
+          weight: data.weight,
+        })
         .eq("id", "1")
         .select();
 
@@ -111,6 +111,36 @@ export default function Track({ setModal }: any): JSX.Element {
       console.log(`${data.alarm}_${data.mood}_${data.stepGoal}_${data.weight}`);
       console.log(error);
       setLoading(false);
+      setModal({
+        active: true,
+        type: "fail",
+        message: "Something went wrong. Please try again.",
+      });
+    }
+  }
+
+  // Read from bluetooth
+  async function readFromBluetooth(server: any) {
+    try {
+      const primaryService = await server.getPrimaryService(id.uartService);
+      const txCharacteristic = await primaryService.getCharacteristic(
+        id.txCharacteristic
+      );
+
+      // Read data from the TX characteristic (UART data from the peripheral)
+      txCharacteristic.addEventListener(
+        "characteristicvaluechanged",
+        (event: any) => {
+          const data = event.target.value;
+          const newProgress = parseInt(data, 10);
+          setStepProgress((prevStepProgress: any) => ({
+            ...prevStepProgress,
+            progress: newProgress,
+          }));
+        }
+      );
+      await txCharacteristic.startNotifications();
+    } catch (error) {
       setModal({
         active: true,
         type: "fail",
@@ -179,10 +209,54 @@ export default function Track({ setModal }: any): JSX.Element {
       stepGoal: settings![0].step_goal,
       weight: settings![0].weight,
     });
+    setStepProgress({
+      progress: settings![0].step_progress,
+      goal: settings![0].step_goal,
+    });
+  }
+
+  // Update progress in db
+  async function updateSupabaseWithProgress() {
+    try {
+      await supabase
+        .from("settings")
+        .update({
+          step_progress: stepProgress.progress,
+        })
+        .eq("id", "1")
+        .select();
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   useEffect(() => {
     readData();
+
+    const settings = supabase
+      .channel("custom-update-channel")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "settings" },
+        (payload) => {
+          console.log("Change received!", payload);
+          setStepProgress((prevStepProgress: any) => ({
+            ...prevStepProgress,
+            goal: payload.new.step_goal,
+          }));
+        }
+      )
+      .subscribe();
+
+    // Send updates to progress
+    const updateInterval = setInterval(() => {
+      updateSupabaseWithProgress();
+    }, 5000);
+
+    return () => {
+      clearInterval(updateInterval);
+      settings.unsubscribe();
+    };
   }, []);
 
   return (
@@ -264,11 +338,17 @@ export default function Track({ setModal }: any): JSX.Element {
       </div>
       {server && (
         <div className="flex justify-center items-center w-full pt-6">
-          <section className="relative flex flex-col items-center w-11/12 sm:w-9/12 h-fit pb-10 rounded-xl bg-white shadow-lg">
+          <section className="relative flex flex-col items-center w-11/12 sm:w-7/12 h-fit pb-10 rounded-xl bg-white shadow-lg">
             <div className="flex flex-col justify-center w-full pl-10 pt-10">
-              <span className="font-bold text-3xl text-blue-500">
-                Step Progress
-              </span>
+              <div className="block lg:flex flex-row items-center">
+                <span className="font-bold text-3xl text-blue-500 pr-5">
+                  Step Progress
+                </span>
+                <ProgressBar
+                  progress={stepProgress.progress}
+                  goal={stepProgress.goal}
+                />
+              </div>
               <div className="pt-6">
                 <p className="font-medium">Alarm</p>
                 <input
@@ -279,40 +359,6 @@ export default function Track({ setModal }: any): JSX.Element {
                   onChange={(e) => handleChange(e)}
                   placeholder="Set your alarm in 24 hour format e.g 0800"
                 />
-                <button
-                  disabled={loading}
-                  onClick={() => {
-                    writeToBluetooth(server, data.alarm, "alarm");
-                  }}
-                  className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold disabled:cursor-not-allowed disabled:bg-gray-300"
-                >
-                  {loading ? (
-                    <div className="flex flex-row justify-center items-center">
-                      <svg
-                        className="animate-spin h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          stroke-width="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                    </div>
-                  ) : (
-                    "Send"
-                  )}
-                </button>
               </div>
               <div className="pt-4">
                 <p className="font-medium">Mood</p>
@@ -327,40 +373,6 @@ export default function Track({ setModal }: any): JSX.Element {
                   <option value="n">Neutral</option>
                   <option value="s">Sad</option>
                 </select>
-                <button
-                  disabled={loading}
-                  onClick={() => {
-                    writeToBluetooth(server, data.mood, "mood");
-                  }}
-                  className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold disabled:cursor-not-allowed disabled:bg-gray-300"
-                >
-                  {loading ? (
-                    <div className="flex flex-row justify-center items-center">
-                      <svg
-                        className="animate-spin h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          stroke-width="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                    </div>
-                  ) : (
-                    "Send"
-                  )}
-                </button>
                 <div className="pt-6">
                   <p className="font-medium">Step Goal</p>
                   <input
@@ -371,40 +383,7 @@ export default function Track({ setModal }: any): JSX.Element {
                     value={data.stepGoal}
                     onChange={(e) => handleChange(e)}
                   />
-                  <button
-                    disabled={loading}
-                    onClick={() => {
-                      writeToBluetooth(server, data.stepGoal, "step_goal");
-                    }}
-                    className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold disabled:cursor-not-allowed disabled:bg-gray-300"
-                  >
-                    {loading ? (
-                      <div className="flex flex-row justify-center items-center">
-                        <svg
-                          className="animate-spin h-5 w-5 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            stroke-width="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                      </div>
-                    ) : (
-                      "Send"
-                    )}
-                  </button>
+
                   <div className="pt-6">
                     <p className="font-medium">Weight</p>
                     <input
@@ -415,17 +394,17 @@ export default function Track({ setModal }: any): JSX.Element {
                       onChange={(e) => handleChange(e)}
                       placeholder="Set your weight"
                     />
-                    <button
-                      disabled={loading}
-                      onClick={() => {
-                        writeToBluetooth(server, data.weight, "weight");
-                      }}
-                      className="lg:ml-2 mt-2 bg-blue-300 rounded-lg w-11/12 lg:w-16 h-10 font-semibold disabled:cursor-not-allowed disabled:bg-gray-300"
-                    >
+                  </div>
+                  <button
+                    disabled={loading}
+                    onClick={() => writeToBluetooth(server)}
+                    className="mt-12 rounded-lg w-11/12 h-12 disabled:bg-gray-400 disabled:cursor-not-allowed bg-blue-500 hover:bg-blue-600 transition-colors ease-in-out"
+                  >
+                    <span className="text-white font-medium">
                       {loading ? (
                         <div className="flex flex-row justify-center items-center">
                           <svg
-                            className="animate-spin h-5 w-5 text-white"
+                            className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -446,16 +425,16 @@ export default function Track({ setModal }: any): JSX.Element {
                           </svg>
                         </div>
                       ) : (
-                        "Send"
+                        "Send Data"
                       )}
-                    </button>
-                  </div>
+                    </span>
+                  </button>
                 </div>
               </div>
               <button
                 disabled={loading}
                 onClick={() => generateMessage()}
-                className="mt-12 rounded-lg w-11/12 h-12 disabled:bg-gray-400 disabled:cursor-not-allowed bg-blue-500 hover:bg-blue-600 transition-colors ease-in-out"
+                className="mt-8 rounded-lg w-11/12 h-12 disabled:bg-gray-400 disabled:cursor-not-allowed bg-blue-500 hover:bg-blue-600 transition-colors ease-in-out"
               >
                 <span className="text-white font-medium">
                   {loading ? (
@@ -480,7 +459,6 @@ export default function Track({ setModal }: any): JSX.Element {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         ></path>
                       </svg>
-                      <p>Generating...</p>
                     </div>
                   ) : (
                     "Generate Motivational Message"
