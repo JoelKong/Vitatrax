@@ -81,11 +81,16 @@ export default function Track({ setModal }: any): JSX.Element {
       );
 
       // Write data to the RX characteristic
-      const encoder = new TextEncoder();
-      const userDescription = encoder.encode(
-        `${data.alarm}_${data.mood}_${data.stepGoal}_${data.weight}_${stepProgress.progress}`
+      const encoder1 = new TextEncoder();
+      const encoder2 = new TextEncoder();
+      const userDescription1 = encoder1.encode(
+        `a_${data.alarm}_${data.mood}_${data.weight}`
       );
-      await rxCharacteristic.writeValue(userDescription);
+      const userDescription2 = encoder2.encode(
+        `b_${data.stepGoal}_${stepProgress.progress}`
+      );
+      await rxCharacteristic.writeValue(userDescription1);
+      await rxCharacteristic.writeValue(userDescription2);
 
       // Update db
       await supabase
