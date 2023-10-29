@@ -181,16 +181,18 @@ void setConnectable(void)
 
 }
 
+// Initialize variables to store the separated values
+String codeword; // To differentiate data
+String alarm;
+String mood;
+int stepgoal;
+int weightOfPerson;
+int stepprogress;
+
 void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_data) {
 
   String receivedStr = String((char *)att_data);
 
-  // Initialize variables to store the separated values
-  String alarm;
-  String mood;
-  int stepgoal;
-  int weightOfPerson;
-  int stepprogress;
   faceDisplayed = false; // To loop mood indicator when new input
 
   // Use strtok to tokenize the string using the "_" separator
@@ -201,22 +203,30 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
 
   while (token != NULL) {
     int intValue = atoi(token);
+
     // Store each token in the corresponding variable based on its position
     switch (tokenPosition) {
       case 0:
-        alarm = token;
+        codeword = token;
         break;
       case 1:
-        mood = token;
+        if (codeword == "a") {
+          alarm = token;
+        } else if (codeword == "b") {
+          stepgoal = intValue;
+        }
         break;
       case 2:
-        stepgoal = intValue;
+        if (codeword == "a") {
+          mood = token;
+        } else if (codeword == "b") {
+          stepprogress = intValue;
+        }
         break;
       case 3:
-        weightOfPerson = intValue;
-        break;
-      case 4:
-        stepprogress = intValue;
+        if (codeword == "a") {
+          weightOfPerson = intValue;
+        }
         break;
       default:
         // Handle unexpected tokens or additional tokens
