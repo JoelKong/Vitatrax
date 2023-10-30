@@ -264,6 +264,9 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
   // Handle for step progress
   totalSteps = stepprogress;
 
+
+  memset(att_data, 0, data_length);
+
   // if (data_length == 4) {
   //   // Check if the received data consists of digits
   //   bool validData = true;

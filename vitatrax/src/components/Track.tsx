@@ -280,13 +280,17 @@ export default function Track({ setModal }: any): JSX.Element {
   }
 
   useEffect(() => {
-    readData();
+    const currentDateNow = getCurrentDate();
+    setCurrentDate(currentDateNow);
+    checkAndResetStepProgressDate();
 
     const checkDate = setInterval(() => {
       const currentDateNow = getCurrentDate();
       setCurrentDate(currentDateNow);
       checkAndResetStepProgressDate();
     }, 5000);
+
+    readData();
 
     const settings = supabase
       .channel("custom-update-channel")
