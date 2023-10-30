@@ -45,11 +45,11 @@ export default function Track({ setModal }: any): JSX.Element {
       .split("T")[0];
 
     if (formattedDate !== currentDate) {
-      setStepProgress({ progress: 0, goal: stepProgress.goal });
+      // setStepProgress({ progress: 0, goal: stepProgress.goal });
 
       await supabase
         .from("settings")
-        .update({ current_date: currentDate })
+        .update({ current_date: currentDate, step_progress: 0 })
         .eq("id", "1");
     }
   };
@@ -69,7 +69,7 @@ export default function Track({ setModal }: any): JSX.Element {
       await readData();
       await readFromBluetooth(serverr);
       await writeToBluetooth(serverr);
-      setFirstInstance(true);
+      // setFirstInstance(true);
       setModal({
         active: true,
         type: "pass",
@@ -138,6 +138,8 @@ export default function Track({ setModal }: any): JSX.Element {
         .eq("id", "1")
         .select();
 
+      setFirstInstance(true);
+
       setModal({
         active: true,
         type: "pass",
@@ -158,6 +160,7 @@ export default function Track({ setModal }: any): JSX.Element {
   // Read from bluetooth
   async function readFromBluetooth(server: any) {
     try {
+      let isDataProcessed = false;
       const primaryService = await server.getPrimaryService(id.uartService);
       const txCharacteristic = await primaryService.getCharacteristic(
         id.txCharacteristic
@@ -167,10 +170,12 @@ export default function Track({ setModal }: any): JSX.Element {
       txCharacteristic.addEventListener(
         "characteristicvaluechanged",
         async (event: any) => {
+          if (isDataProcessed) return;
+          isDataProcessed = true;
           const data = event.target.value;
           const receivedData = new TextDecoder().decode(data);
           const intValue = parseInt(receivedData, 10);
-          if (intValue === 1) {
+          if (!receivedData.includes(":")) {
             setStepProgress((prevStepProgress: any) => ({
               ...prevStepProgress,
               progress: prevStepProgress.progress + intValue,
@@ -181,6 +186,7 @@ export default function Track({ setModal }: any): JSX.Element {
               .insert([{ timing: receivedData }])
               .select();
           }
+          isDataProcessed = false;
         }
       );
       await txCharacteristic.startNotifications();
@@ -204,7 +210,6 @@ export default function Track({ setModal }: any): JSX.Element {
     });
 
     if (!response.ok) {
-      const errorMessage = await response.text();
       setModal({
         active: true,
         type: "fail",
@@ -280,7 +285,6 @@ export default function Track({ setModal }: any): JSX.Element {
     const checkDate = setInterval(() => {
       const currentDateNow = getCurrentDate();
       setCurrentDate(currentDateNow);
-      console.log(currentDate);
       checkAndResetStepProgressDate();
     }, 5000);
 

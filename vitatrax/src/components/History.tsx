@@ -57,7 +57,10 @@ export default function History(): JSX.Element {
           {time &&
             time.map((dateTime: any, index: number) => {
               return (
-                <p key={index} className="tracking-widest font-medium pt-2">
+                <p
+                  key={`time_${index}`}
+                  className="tracking-widest font-medium pt-2"
+                >
                   {dateTime}
                 </p>
               );
@@ -68,7 +71,10 @@ export default function History(): JSX.Element {
           {stopwatchTime &&
             stopwatchTime.map((stopwatch: any, index: number) => {
               return (
-                <p key={index} className="tracking-widest font-medium pt-2">
+                <p
+                  key={`stopwatch_${index}`}
+                  className="tracking-widest font-medium pt-2"
+                >
                   {stopwatch.timing}
                 </p>
               );

@@ -219,16 +219,22 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
       case 2:
         if (codeword == "a") {
           mood = token;
+        } else if (codeword == "b") {
+          stepprogress = intValue;
         }
         break;
       case 3:
         if (codeword == "a") {
           weightOfPerson = intValue;
+        } else if (codeword == "b") {
+          stepprogress = intValue;
         }
         break;
       case 4:
          if (codeword == "a") {
           stepgoal = intValue;
+        } else if (codeword == "b") {
+          stepprogress = intValue;
         }
         break;     
       default:
