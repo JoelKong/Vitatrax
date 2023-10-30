@@ -38,6 +38,8 @@ int animationCounter = 0;
 bool firstSpriteShown = false;
 const unsigned long DEBOUNCE_DELAY = 200; // in milliseconds
 unsigned long lastButtonPressTime = 0;
+bool dataSent = false;
+bool prevButtonState = false;
 
 // Stopwatch variables
 bool stopwatchRunning = false;
@@ -147,6 +149,8 @@ void initializeAccel() {
 // Buttons
 void handleButtonPresses() {
   unsigned long currentTime = millis();
+  bool currButtonState = display.getButtons() & TSButtonUpperRight;
+
   if ((currentTime - lastButtonPressTime) > DEBOUNCE_DELAY) {
     switch (currentScreen) {
       case ANIMATION_SCREEN:
@@ -176,11 +180,16 @@ void handleButtonPresses() {
         } else if (display.getButtons() & TSButtonLowerLeft) {
           resetStopwatch();  // Reset the stopwatch when the bottom left button is pressed
           lastButtonPressTime = currentTime;
-        } else if (display.getButtons() & TSButtonUpperRight) {
-          // Add bluetooth track here
-          char time[20];
-          snprintf(time, sizeof(time), "%d:%d", minutes, seconds);
-          lib_aci_send_data(0, (uint8_t*)time, strlen(time));
+        } else if (currButtonState && !prevButtonState) {
+          if (!dataSent){
+            char time[20]; // Send stopwatch time when top right button is pressed
+            snprintf(time, sizeof(time), "%d:%d", minutes, seconds);
+            lib_aci_send_data(0, (uint8_t*)time, strlen(time));
+            dataSent = true;
+          }
+        }
+        if (!currButtonState){
+          dataSent = false;
         }
         break;
       case ECO_SCREEN:
@@ -189,6 +198,7 @@ void handleButtonPresses() {
           lastButtonPressTime = currentTime;
         }
     }
+    prevButtonState = currButtonState;
   }
 }
 
@@ -532,11 +542,6 @@ void drawTracker() {
     // Display Progress Bar
     displayProgressBar(totalSteps, stepGoal);
   }
-}
-
-void refreshTracker(int prevFilledWidth){
-  // display.clearScreen();
-  drawTracker();
 }
 
 // Stopwatch Functions
