@@ -87,12 +87,33 @@ const byte time_seconds = 0;
 float getBattPercent();
 int batteryPercentage = getBattPercent();
 
+// Game
+const int paddleWidth = 4;
+const int paddleHeight = 20;
+const int ballSize = 4;
+int playerY = (64 - paddleHeight) / 2; // Start in the middle
+int enemyY = (64 - paddleHeight) / 2; // Start in the middle
+int ballX = 48;
+int ballY = 32;
+int ballSpeedX = -2;
+int ballSpeedY = -2;
+int prevPlayerY = (64 - paddleHeight) / 2;
+int prevEnemyY = (64 - paddleHeight) / 2;
+int prevBallX = 48;
+int prevBallY = 32;
+int score = 0;
+const int ballSpeedIncrease = 1;  // Increase speed by 1 pixel per frame
+const int paddleSpeedIncrease = 1;  // Increase speed by 1 pixel per frame
+const int maxBallSpeed = 4;  // Maximum speed for the ball
+const int maxPaddleSpeed = 5;  // Maximum speed for the paddles
+
 // Screens
 enum ScreenType {
   ANIMATION_SCREEN,
   MENU_SCREEN,
   TRACKER_SCREEN,
-  ECO_SCREEN
+  ECO_SCREEN,
+  GAME_SCREEN
 };
 
 ScreenType currentScreen = ANIMATION_SCREEN;
@@ -134,6 +155,9 @@ void loop() {
       drawBatterySymbol(display, 14, 1, batteryPercentage);
       displayTime();
       break;
+    case GAME_SCREEN:
+      drawGame();
+      break;
   }
   
   handleButtonPresses();
@@ -157,6 +181,8 @@ void handleButtonPresses() {
         if (display.getButtons() & TSButtonLowerRight) {
           transitionToMenuScreen();
           lastButtonPressTime = currentTime;
+        } else if (display.getButtons() & TSButtonLowerLeft) {
+          transitionToGameScreen();
         }
         break;
       case MENU_SCREEN:
@@ -197,6 +223,12 @@ void handleButtonPresses() {
           transitionToMenuScreen();
           lastButtonPressTime = currentTime;
         }
+      case GAME_SCREEN:
+        if (display.getButtons() & TSButtonLowerRight) {
+          transitionToAnimationScreen();  // Transition back to the animation screen
+          lastButtonPressTime = currentTime;
+        }
+        break;
     }
     prevButtonState = currButtonState;
   }
@@ -225,6 +257,11 @@ void transitionToEcoScreen() {
   drawEco();
 }
 
+void transitionToGameScreen() {
+  currentScreen = GAME_SCREEN;
+  drawGameScreen();
+}
+
 
 
 
@@ -242,19 +279,21 @@ void drawInitialScreen() {
   display.drawRect(0, 0, 96, 64, TSRectangleFilled, TS_8b_White);
   drawRightArrow(88, 54); // Bottom-right arrow
   drawTextBesideArrow("Go", 70, 53, TS_8b_White);
-  drawTextBesideArrow("Vitatrax", 26, 10, TS_8b_White);
+  drawLeftArrow(4, 54); // Bottom-left arrow
+  drawTextBesideArrow("Game", 14, 53, TS_8b_White);
+  drawTextBesideArrow("Vitatrax", 26, 12, TS_8b_White);
 }
 
 void displayAnimationScreen() {
   if (!firstSpriteShown) {
-    drawBMPImage(40, 24, sprites[0], 16, 16);
+    drawBMPImage(40, 26, sprites[0], 16, 16);
     firstSpriteShown = true;
     delay(600);
     return;
   }
 
   clearCharacterArea();
-  drawBMPImage(40, 24, sprites[animationCounter], 16, 16);
+  drawBMPImage(40, 26, sprites[animationCounter], 16, 16);
   drawAnimationNavigation();
 
   animationCounter = (animationCounter == 1 ? 2 : 1);
@@ -262,7 +301,7 @@ void displayAnimationScreen() {
 }
 
 void clearCharacterArea() {
-  display.drawRect(39, 23, 18, 18, TSRectangleFilled, TS_8b_White);
+  display.drawRect(39, 25, 18, 18, TSRectangleFilled, TS_8b_White);
 }
 
 void drawAnimationNavigation() {
@@ -308,6 +347,120 @@ void drawTextBesideArrow(const char* text, int x, int y, uint8_t bg) {
 }
 
 
+// Game screen
+void drawGameScreen() {
+  display.clearScreen();
+
+  drawRightArrow(88, 54); // Bottom-right arrow
+  drawTextBesideArrow("Back", 70, 53, TS_8b_Black);
+
+  // Draw player paddle
+  display.drawRect(8, playerY, paddleWidth, paddleHeight, TSRectangleFilled, TS_8b_Green); // Player paddle colored green
+
+  // Draw enemy paddle
+  display.drawRect(84, enemyY, paddleWidth, paddleHeight, TSRectangleFilled, TS_8b_Red); // Enemy paddle colored red
+
+  // Draw ball
+  display.drawRect(ballX, ballY, ballSize, ballSize, TSRectangleFilled, TS_8b_Blue);
+
+}
+
+void displayScore() {
+    int scoreX = 46; // Roughly middle of the screen
+    int scoreY = 14; // Adjust based on where you want it vertically
+    
+    // Clear previous score with a black rectangle
+    display.drawRect(scoreX - 10, scoreY - 10, 20, 20, TSRectangleFilled, TS_8b_Black);
+    
+    // Set font color and print the score
+    display.fontColor(TS_8b_White, TS_8b_Black);  // White text on black background
+    display.setCursor(scoreX, scoreY);
+    display.print(score);
+}
+
+void drawGame() {
+  display.clearScreen();
+
+  displayScore();
+
+  if (display.getButtons() & TSButtonLowerLeft) {
+    playerY += 2 + min(abs(ballSpeedX), maxPaddleSpeed) - 2;  // Adjust player speed based on ball speed
+  } else if (display.getButtons() & TSButtonUpperLeft) {
+      playerY -= 2 + min(abs(ballSpeedX), maxPaddleSpeed) - 2;  // Adjust player speed based on ball speed
+  }
+
+  // Ensure player paddle remains within bounds
+  playerY = constrain(playerY, 0, 64 - paddleHeight);
+
+  // Move the ball
+  ballX += ballSpeedX;
+  ballY += ballSpeedY;
+
+  // Ball collision with top and bottom
+  if (ballY <= 0 || ballY >= 60) {
+    ballSpeedY = -ballSpeedY;
+  }
+
+  // Ball collision with player paddle
+if (ballX <= paddleWidth && ballY + ballSize >= playerY && ballY <= playerY + paddleHeight) {
+    ballSpeedX = -ballSpeedX;
+    if (abs(ballSpeedX) < maxBallSpeed) {  // Increase ball speed if below the limit
+        ballSpeedX += (ballSpeedX > 0) ? 0.05 : -0.05;
+    }
+    if (abs(ballSpeedY) < maxBallSpeed) {  // Increase ball speed if below the limit
+        ballSpeedY += (ballSpeedY > 0) ? 0.05 : -0.05;
+    }
+    score++;
+}
+
+  // Ball collision with enemy paddle
+  if (ballX >= 96 - paddleWidth - ballSize && ballY + ballSize >= enemyY && ballY <= enemyY + paddleHeight) {
+  ballSpeedX = -ballSpeedX;
+  if (abs(ballSpeedX) < maxBallSpeed) {  // Increase ball speed if below the limit
+    ballSpeedX += (ballSpeedX > 0) ? ballSpeedIncrease : -ballSpeedIncrease;
+  }
+  if (abs(ballSpeedY) < maxBallSpeed) {  // Increase ball speed if below the limit
+    ballSpeedY += (ballSpeedY > 0) ? ballSpeedIncrease : -ballSpeedIncrease;
+  }
+}
+
+  // Ball out of bounds (left or right)
+  if (ballX <= 0 || ballX >= 96) {
+  
+    if (ballX <= 0) {
+      // If the ball went out of bounds on the left side, reset the score
+      score = 0;
+    }
+
+  // Reset ball to the middle
+  ballX = 48;
+  ballY = 32;
+  ballSpeedX = -2;  // Reset ball speed
+  ballSpeedY = -2;  // Reset ball speed
+}
+
+  // Draw player paddle
+  display.drawRect(0, playerY, paddleWidth, paddleHeight, TSRectangleFilled, TS_8b_Green); // Player paddle colored green
+
+  // Draw enemy paddle
+  display.drawRect(96 - paddleWidth, enemyY, paddleWidth, paddleHeight, TSRectangleFilled, TS_8b_Red); // Enemy paddle colored red
+
+  // Draw ball
+  display.drawRect(ballX, ballY, ballSize, ballSize, TSRectangleFilled, TS_8b_White);
+
+
+  // Enemy AI: make the enemy paddle follow the ball
+  int enemySpeed = 3 + min(abs(ballSpeedX), maxPaddleSpeed) - 2;  // Adjust enemy speed based on ball speed
+  if (ballY > enemyY + paddleHeight / 2) {
+    enemyY += enemySpeed;
+  } else if (ballY < enemyY + paddleHeight / 2) {
+    enemyY -= enemySpeed;
+  }
+
+  // Ensure enemy paddle remains within bounds
+  enemyY = constrain(enemyY, 0, 64 - paddleHeight);
+  delay(50);
+}
 
 
 
