@@ -51,7 +51,7 @@ export default function History(): JSX.Element {
 
   return (
     <section className="w-full h-full flex justify-center">
-      <div className="w-5/12 flex justify-around rounded-3xl border-2 h-fit pt-2 pb-4 bg-blue-300">
+      <div className="w-11/12 lg:w-5/12 flex justify-around rounded-3xl border-2 h-fit pt-2 pb-4 bg-blue-300">
         <div className="flex flex-col justify-center items-center h-fit">
           <span className="pb-4 font-bold text-xl text-green-700">Date</span>
           {time &&

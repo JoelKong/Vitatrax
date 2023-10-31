@@ -7,6 +7,7 @@ export default function Track({ setModal }: any): JSX.Element {
   const [server, setServer] = useState<any>();
   const [stepProgress, setStepProgress] = useState<any>();
   const [attemptToConnect, setAttemptToConnect] = useState<boolean>(false);
+  const [connected, setConnected] = useState<boolean>(false);
   const [id, setID] = useState<any>({
     uartService: "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
     rxCharacteristic: "6e400002-b5a3-f393-e0a9-e50e24dcca9e",
@@ -33,7 +34,7 @@ export default function Track({ setModal }: any): JSX.Element {
   }
 
   // Check if the date has changed, and reset step progress
-  const checkAndResetStepProgressDate = async () => {
+  async function checkAndResetStepProgressDate() {
     let { data: settings, error } = await supabase
       .from("settings")
       .select("current_date")
@@ -52,7 +53,7 @@ export default function Track({ setModal }: any): JSX.Element {
         .update({ current_date: currentDate, step_progress: 0 })
         .eq("id", "1");
     }
-  };
+  }
 
   // Connect to Bluetooth
   async function connectToBluetooth() {
@@ -69,6 +70,7 @@ export default function Track({ setModal }: any): JSX.Element {
       await readData();
       await readFromBluetooth(serverr);
       await writeToBluetooth(serverr);
+      setConnected(true);
       // setFirstInstance(true);
       setModal({
         active: true,
@@ -94,6 +96,7 @@ export default function Track({ setModal }: any): JSX.Element {
       setServer(null);
       setFirstInstance(false);
       setAttemptToConnect(false);
+      setConnected(false);
     } catch (error) {
       setModal({
         active: true,
@@ -207,6 +210,10 @@ export default function Track({ setModal }: any): JSX.Element {
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        stepGoal: stepProgress.goal,
+        stepProgress: stepProgress.progress,
+      }),
     });
 
     if (!response.ok) {
@@ -313,7 +320,9 @@ export default function Track({ setModal }: any): JSX.Element {
   }, []);
 
   useEffect(() => {
-    updateSupabaseWithProgress();
+    if (connected) {
+      updateSupabaseWithProgress();
+    }
   }, [stepProgress]);
 
   return (
