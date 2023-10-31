@@ -76,7 +76,7 @@ bool goalReached = false; // Flag to indicate if the goal has been reached
 unsigned long lastUpdateMillis = 0; // Store the last time the progress bar was updated
 
 // Eco
-int weight = 70;
+String weight = " 70kg";
 
 //Time
 const byte time_hours = 13;
@@ -462,6 +462,11 @@ void displayMenu() {
   }
 }
 
+void refreshMenu() {
+  display.clearScreen();
+  displayMenu();
+}
+
 // Alarm
 // void updateAlarmValue(String alarmValueStr) {
   // Replace the following with the correct coordinates and text elements
@@ -489,12 +494,6 @@ void displayMenu() {
   // display.print(minutes);
 // }
 
-void refreshMenuScreen(String alarmValueStr, int stepGoal, String faceType) {
-  display.clearScreen();
-  // To redraw face
-  faceDisplayed = false;
-  displayMenu();
-}
 
 void clearSection(int x, int y, int width, int height, uint16_t backgroundColor) {
   for (int i = 0; i < height; i++) {
@@ -695,10 +694,11 @@ void displayEco() {
   display.setCursor(5, 15);
   display.print("Weight: ");
   display.print(weight);
-  display.print("kg");
+
+  int w = atoi(weight.c_str());
 
   // Calories of user
-  double calories = 3.9 * weight * 3.5 / 200;
+  double calories = 3.9 * w * 3.5 / 200;
   // CO2 emission per step
   double co2_per_step = (calories / 100) * 2.2;
 
