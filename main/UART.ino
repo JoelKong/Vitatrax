@@ -186,7 +186,7 @@ String codeword; // To differentiate data
 String alarm;
 String mood;
 int stepgoal;
-int weightOfPerson;
+String weightOfPerson;
 int stepprogress;
 
 void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_data) {
@@ -225,7 +225,7 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
         break;
       case 3:
         if (codeword == "a") {
-          weightOfPerson = intValue;
+          weightOfPerson = token;
         } else if (codeword == "b") {
           stepprogress = intValue;
         }
@@ -254,7 +254,13 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
   stepGoal = stepgoal;
 
   // Handle for weight
-  weight = weightOfPerson;
+  int weightValue = weightOfPerson.toInt();
+
+  // Format the weight string with leading zeros
+  char formattedWeight[8]; // Assuming a max of 8 characters, adjust as needed
+  snprintf(formattedWeight, sizeof(formattedWeight), "%3dkg", weightValue);
+
+  weight = formattedWeight;
 
   // Handle for alarm
   String hours = alarm.substring(0, 2);
