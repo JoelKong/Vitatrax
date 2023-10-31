@@ -7,9 +7,9 @@ extern uint16_t UARTRXCharHandle;
 
 extern int alarmValue; // Declare alarmValue as a global variable
 extern String faceType;
-extern int stepGoal;
+extern String stepGoal;
 extern String weight;
-extern int totalSteps;
+extern String totalSteps;
 
 
 #endif

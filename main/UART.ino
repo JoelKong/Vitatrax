@@ -185,9 +185,9 @@ void setConnectable(void)
 String codeword; // To differentiate data
 String alarm;
 String mood;
-int stepgoal;
+String stepgoal;
 String weightOfPerson;
-int stepprogress;
+String stepprogress;
 
 void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_data) {
 
@@ -213,28 +213,28 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
         if (codeword == "a") {
           alarm = token;
         } else if (codeword == "b") {
-          stepprogress = intValue;
+          stepprogress = token;
         }
         break;
       case 2:
         if (codeword == "a") {
           mood = token;
         } else if (codeword == "b") {
-          stepprogress = intValue;
+          stepprogress = token;
         }
         break;
       case 3:
         if (codeword == "a") {
           weightOfPerson = token;
         } else if (codeword == "b") {
-          stepprogress = intValue;
+          stepprogress = token;
         }
         break;
       case 4:
          if (codeword == "a") {
-          stepgoal = intValue;
+          stepgoal = token;
         } else if (codeword == "b") {
-          stepprogress = intValue;
+          stepprogress = token;
         }
         break;     
       default:
@@ -251,14 +251,18 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
   faceType = mood;
 
   // Handle for stepgoal
-  stepGoal = stepgoal;
+  int stepVal = stepgoal.toInt();
+  char formattedGoal[8];
+  snprintf(formattedGoal, sizeof(formattedGoal), "%04d", stepVal);
+
+  stepGoal = formattedGoal;
 
   // Handle for weight
   int weightValue = weightOfPerson.toInt();
 
   // Format the weight string with leading zeros
   char formattedWeight[8]; // Assuming a max of 8 characters, adjust as needed
-  snprintf(formattedWeight, sizeof(formattedWeight), "%3dkg", weightValue);
+  snprintf(formattedWeight, sizeof(formattedWeight), "%03dkg", weightValue);
 
   weight = formattedWeight;
 
@@ -268,7 +272,11 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
   alarmValueStr = hours + ":" + minutes;
 
   // Handle for step progress
-  totalSteps = stepprogress;
+  int progVal = stepprogress.toInt();
+  char formattedProg[8];
+  snprintf(formattedProg, sizeof(formattedProg), "%04d", progVal);
+  totalSteps = formattedProg;
+
 
 
   memset(att_data, 0, data_length);

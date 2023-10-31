@@ -49,11 +49,11 @@ int minutes = 0;
 int seconds = 0;
 
 // Step count variables
-int stepGoal = 500;
+String stepGoal = "0500";
 bool validStep = false;
 int newSample = 0;
 int oldSample = 0;
-int totalSteps = 0;
+String totalSteps = "0000";
 int stepIntervalLow = 200;
 unsigned long stepIntervalHigh = 2000;
 unsigned long lastStepTime = 0;
@@ -76,7 +76,7 @@ bool goalReached = false; // Flag to indicate if the goal has been reached
 unsigned long lastUpdateMillis = 0; // Store the last time the progress bar was updated
 
 // Eco
-String weight = " 70kg";
+String weight = "070kg";
 
 //Time
 const byte time_hours = 13;
@@ -537,7 +537,12 @@ int readSteps() {
       }
       lastStepTime = millis();
       if (newStep) {
-        totalSteps++;
+        int totalInt = totalSteps.toInt();
+        totalInt++;
+
+        char steps[8];
+        snprintf(steps, sizeof(steps), "%04d", totalInt);
+        totalSteps = steps;
         char data[] = "1";
         lib_aci_send_data(0, (uint8_t*)data, strlen(data));
       }
@@ -615,11 +620,6 @@ void displayMenu() {
   }
 }
 
-void refreshMenu() {
-  display.clearScreen();
-  displayMenu();
-}
-
 // Alarm
 // void updateAlarmValue(String alarmValueStr) {
   // Replace the following with the correct coordinates and text elements
@@ -692,7 +692,7 @@ void drawTracker() {
       drawTextBesideArrow("Start", 58, 52, TS_8b_Black);
     }
     // Display Progress Bar
-    displayProgressBar(totalSteps, stepGoal);
+    displayProgressBar(totalSteps.toInt(), stepGoal.toInt());
   }
 }
 
@@ -829,7 +829,7 @@ void checkForSteps() {
   int stepDetected = readSteps(); // This function checks for steps and returns 1 if a step is detected
 
   if (stepDetected) {
-    displayProgressBar(totalSteps, stepGoal); // Update the progress bar with the new totalSteps
+    displayProgressBar(totalSteps.toInt(), stepGoal.toInt()); // Update the progress bar with the new totalSteps
   }
 }
 
@@ -856,9 +856,9 @@ void displayEco() {
   double co2_per_step = (calories / 100) * 2.2;
 
   // Total CO2 emission
-  double total_co2 = totalSteps * co2_per_step;
+  double total_co2 = totalSteps.toInt() * co2_per_step;
   // Trees saved
-  int trees = round((totalSteps * co2_per_step) / 21.77);
+  int trees = round((totalSteps.toInt() * co2_per_step) / 21.77);
   // Equivalent car miles
   double car_miles = total_co2 / 2.3;
 
