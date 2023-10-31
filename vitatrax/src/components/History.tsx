@@ -55,30 +55,36 @@ export default function History(): JSX.Element {
         <div className="flex flex-col justify-center items-center h-fit">
           <span className="pb-4 font-bold text-xl text-green-700">Date</span>
           {time &&
-            time.map((dateTime: any, index: number) => {
-              return (
-                <p
-                  key={`time_${index}`}
-                  className="tracking-widest font-medium pt-2"
-                >
-                  {dateTime}
-                </p>
-              );
-            })}
+            time
+              .slice(0)
+              .reverse()
+              .map((dateTime: any, index: number) => {
+                return (
+                  <p
+                    key={`time_${index}`}
+                    className="tracking-widest font-medium pt-2"
+                  >
+                    {dateTime}
+                  </p>
+                );
+              })}
         </div>
         <div className="flex flex-col justify-center items-center h-fit">
           <span className="pb-4 font-bold text-xl text-green-700">Timing</span>
           {stopwatchTime &&
-            stopwatchTime.map((stopwatch: any, index: number) => {
-              return (
-                <p
-                  key={`stopwatch_${index}`}
-                  className="tracking-widest font-medium pt-2"
-                >
-                  {stopwatch.timing}
-                </p>
-              );
-            })}
+            stopwatchTime
+              .slice(0)
+              .reverse()
+              .map((stopwatch: any, index: number) => {
+                return (
+                  <p
+                    key={`stopwatch_${index}`}
+                    className="tracking-widest font-medium pt-2"
+                  >
+                    {stopwatch.timing}
+                  </p>
+                );
+              })}
         </div>
       </div>
     </section>
