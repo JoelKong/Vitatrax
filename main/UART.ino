@@ -185,9 +185,9 @@ void setConnectable(void)
 String codeword; // To differentiate data
 String alarm;
 String mood;
-String stepgoal;
+int stepgoal;
 String weightOfPerson;
-String stepprogress;
+int stepprogress;
 
 void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_data) {
 
@@ -213,28 +213,28 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
         if (codeword == "a") {
           alarm = token;
         } else if (codeword == "b") {
-          stepprogress = token;
+          stepprogress = intValue;
         }
         break;
       case 2:
         if (codeword == "a") {
           mood = token;
         } else if (codeword == "b") {
-          stepprogress = token;
+          stepprogress = intValue;
         }
         break;
       case 3:
         if (codeword == "a") {
           weightOfPerson = token;
         } else if (codeword == "b") {
-          stepprogress = token;
+          stepprogress = intValue;
         }
         break;
       case 4:
          if (codeword == "a") {
-          stepgoal = token;
+          stepgoal = intValue;
         } else if (codeword == "b") {
-          stepprogress = token;
+          stepprogress = intValue;
         }
         break;     
       default:
@@ -251,9 +251,8 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
   faceType = mood;
 
   // Handle for stepgoal
-  int stepVal = stepgoal.toInt();
   char formattedGoal[8];
-  snprintf(formattedGoal, sizeof(formattedGoal), "%04d", stepVal);
+  snprintf(formattedGoal, sizeof(formattedGoal), "%04d", stepgoal);
 
   stepGoal = formattedGoal;
 
@@ -272,39 +271,14 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
   alarmValueStr = hours + ":" + minutes;
 
   // Handle for step progress
-  int progVal = stepprogress.toInt();
   char formattedProg[8];
-  snprintf(formattedProg, sizeof(formattedProg), "%04d", progVal);
+  snprintf(formattedProg, sizeof(formattedProg), "%04d", stepprogress);
   totalSteps = formattedProg;
-
-
 
   memset(att_data, 0, data_length);
 
-  // if (data_length == 4) {
-  //   // Check if the received data consists of digits
-  //   bool validData = true;
-  //   for (int i = 0; i < 4; i++) {
-  //     if (!isdigit(alarm)) {
-  //       validData = false;
-  //       break;
-  //     }
-  //   }
-
-  //   if (validData && data_length == 4) {
-  //     // Convert the received text data to the desired format (HH:MM)
-  //     String receivedStr = String((char *)alarm);
-  //     String hours = receivedStr.substring(0, 2);
-  //     String minutes = receivedStr.substring(2, 4);
-
-  //     // Store the received alarm value in the global variable
-  //     alarmValueStr = hours + ":" + minutes;
-  //   }
-  // }
-  
-
-
 }
+
 void GAP_ConnectionComplete_CB(uint8_t addr[6], uint16_t handle) {
 
   connected = TRUE;

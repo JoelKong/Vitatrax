@@ -612,6 +612,7 @@ void displayMenu() {
   display.setCursor(5, 35);
   display.print("Prog: ");
   display.print(totalSteps);
+  
 
   // Draw the Face (Default is Smiley)
   if (!faceDisplayed) {
@@ -620,32 +621,6 @@ void displayMenu() {
   }
 }
 
-// Alarm
-// void updateAlarmValue(String alarmValueStr) {
-  // Replace the following with the correct coordinates and text elements
-  // int alarmX = 5;
-  // int alarmY = 15;
-
-  // Clear the section where "Alarm: " is displayed
-  // clearSection(alarmX, alarmY, 70, 10, 0x0000);
-
-  // Extract hours and minutes
-  // int hours = alarmValueStr.substring(0, 2).toInt();
-  // int minutes = alarmValueStr.substring(2, 4).toInt();
-
-  // Format and display the new alarm value as "Alarm: HH:MM"
-  // display.setCursor(alarmX, alarmY);
-  // display.print("Alarm: ");
-  // if (hours < 10) {
-  //   display.print("0");
-  // }
-  // display.print(hours);
-  // display.print(":");
-  // if (minutes < 10) {
-  //   display.print("0");
-  // }
-  // display.print(minutes);
-// }
 
 
 void clearSection(int x, int y, int width, int height, uint16_t backgroundColor) {
