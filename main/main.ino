@@ -64,6 +64,7 @@ unsigned long lastStepTime = 0;
 const int amtSamples = 32;
 int aBuff[amtSamples];
 int aBuffPos = 0;
+bool goalDisplayed = false;
 
 // Mood Indicator Display
 bool faceDisplayed = false;
@@ -619,8 +620,17 @@ void displayMenu() {
         display.print("Wake");
     } else {
         display.print(alarmValueStr);
-    }
+  }
 
+  if (goalDisplayed) {
+    display.setCursor(5, 25);
+    display.print("Goal: ");
+    for (int i = 0; i < sizeof(stepGoal); i++) {
+      display.print(" ");
+    }
+    goalDisplayed = false;
+  }
+  
   display.setCursor(5, 25);
   display.print("Goal: ");
   display.print(stepGoal);
