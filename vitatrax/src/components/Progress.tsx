@@ -14,7 +14,7 @@ export default function Progress(): JSX.Element {
       let date = new Date(info.created_at);
       let year = date.getFullYear();
       let month = date.getMonth() + 1;
-      let day = date.getDate();
+      let day = date.getDate() - 1;
       let formattedDate = `${year}-${month}-${day}`;
       let weight = info.weight;
       let step = info.step_progress;
