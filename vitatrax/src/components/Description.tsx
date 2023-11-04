@@ -20,9 +20,9 @@ export default function Description(): JSX.Element {
             </header>
             <p className="pt-4 text-lg tracking-wide">
               15.3 billion trees are cut down every year. Over the pass 12,000
-              years, 46% of the world's trees have been cleared. Also, 1.5
-              billion tons of greenhouse gases are released into the environment
-              every year.
+              years, 46% of the earth trees have been cleared. Also, 1.5 billion
+              tons of greenhouse gases are released into the environment every
+              year.
             </p>
           </div>
         </div>
