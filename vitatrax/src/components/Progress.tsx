@@ -60,41 +60,44 @@ export default function Progress(): JSX.Element {
           Daily Progress 🌳
         </div>
         {data && data[0] ? (
-          data.map((info: any, index: any) => {
-            return (
-              <div
-                key={index}
-                className={`w-full rounded-xl mb-10 flex flex-col justify-center items-center shadow-2xl ${
-                  toggle[index] ? "h-fit pb-6 bg-green-300" : "h-14"
-                }`}
-              >
-                <button
-                  className="flex flex-row justify-center items-center w-full h-14 rounded-xl bg-blue-400 hover:bg-blue-500"
-                  onClick={() => handleToggle(index)}
+          data
+            .slice(0)
+            .reverse()
+            .map((info: any, index: any) => {
+              return (
+                <div
+                  key={index}
+                  className={`w-full rounded-xl mb-10 flex flex-col justify-center items-center shadow-2xl ${
+                    toggle[index] ? "h-fit pb-6 bg-green-300" : "h-14"
+                  }`}
                 >
-                  <p className="font-semibold text-xl">{info.date}</p>
-                  <div className="pt-1 pl-2 scale-125">
-                    <MdOutlineArrowDropDownCircle />
-                  </div>
-                </button>
-                {toggle[index] && (
-                  <div className="flex flex-col items-center pt-2 font-semibold text-lg tracking-wide">
-                    <p>Weight: {info.weight}</p>
-                    <p>Total Steps: {info.step}</p>
-                    <p>
-                      Total CO2 emissions saved:{" "}
-                      {Math.round(info.emissions * 1000) / 1000}
-                    </p>
-                    <p>Trees saved: {Math.floor(info.trees_saved)}</p>
-                    <p>
-                      Equivalent Car Miles travelled:{" "}
-                      {Math.round(info.car_miles * 1000) / 1000}
-                    </p>
-                  </div>
-                )}
-              </div>
-            );
-          })
+                  <button
+                    className="flex flex-row justify-center items-center w-full h-14 rounded-xl bg-blue-400 hover:bg-blue-500"
+                    onClick={() => handleToggle(index)}
+                  >
+                    <p className="font-semibold text-xl">{info.date}</p>
+                    <div className="pt-1 pl-2 scale-125">
+                      <MdOutlineArrowDropDownCircle />
+                    </div>
+                  </button>
+                  {toggle[index] && (
+                    <div className="flex flex-col items-center pt-2 font-semibold text-lg tracking-wide">
+                      <p>Weight: {info.weight}</p>
+                      <p>Total Steps: {info.step}</p>
+                      <p>
+                        Total CO2 emissions saved:{" "}
+                        {Math.round(info.emissions * 1000) / 1000}
+                      </p>
+                      <p>Trees saved: {Math.floor(info.trees_saved)}</p>
+                      <p>
+                        Equivalent Car Miles travelled:{" "}
+                        {Math.round(info.car_miles * 1000) / 1000}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })
         ) : (
           <div className="text-xl font-semibold">
             No data recorded yet. Start walking!
