@@ -21,7 +21,6 @@ export default function Track({ setModal }: any): JSX.Element {
     weight: "70",
   });
   const [loading, setLoading] = useState<boolean>(false);
-  const [firstInstance, setFirstInstance] = useState(false);
 
   // Connect to Bluetooth
   async function connectToBluetooth() {
@@ -39,7 +38,6 @@ export default function Track({ setModal }: any): JSX.Element {
       await readFromBluetooth(serverr);
       await writeToBluetooth(serverr);
       setConnected(true);
-      // setFirstInstance(true);
       setModal({
         active: true,
         type: "pass",
@@ -62,7 +60,6 @@ export default function Track({ setModal }: any): JSX.Element {
     try {
       server.disconnect();
       setServer(null);
-      setFirstInstance(false);
       setAttemptToConnect(false);
       setConnected(false);
     } catch (error) {
@@ -93,9 +90,7 @@ export default function Track({ setModal }: any): JSX.Element {
       const userDescription2 = encoder2.encode(`b_${stepProgress.progress}`);
 
       await rxCharacteristic.writeValue(userDescription1);
-      if (!firstInstance) {
-        await rxCharacteristic.writeValue(userDescription2);
-      }
+      await rxCharacteristic.writeValue(userDescription2);
 
       // Update db
       await supabase
@@ -108,8 +103,6 @@ export default function Track({ setModal }: any): JSX.Element {
         })
         .eq("id", "1")
         .select();
-
-      setFirstInstance(true);
 
       setModal({
         active: true,
