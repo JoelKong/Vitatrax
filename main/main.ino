@@ -24,6 +24,10 @@ uint8_t ble_rx_buffer_len = 0;
 uint8_t ble_connection_state = false;
 #define PIPE_UART_OVER_BTLE_UART_TX_TX 0
 
+// Follows the exact timing when the code is uploaded. It displays the same time at TinyScreen
+#define COMPILETIME_HOUR   ((__TIME__[0]-'0')*10 + (__TIME__[1]-'0'))
+#define COMPILETIME_MINUTE ((__TIME__[3]-'0')*10 + (__TIME__[4]-'0'))
+#define COMPILETIME_SECOND ((__TIME__[6]-'0')*10 + (__TIME__[7]-'0'))
 
 // Initialise accelerometer
 BMA250 accel_sensor;
@@ -66,7 +70,8 @@ bool faceDisplayed = false;
 String faceType = "h";
 
 //Alarm
-String alarmValueStr = "10:00"; 
+String alarmValueStr = "10:00";
+bool isAlarmActive = false;
 
 // Progress bar variables
 unsigned long previousMillis = 0;
@@ -125,13 +130,17 @@ void setup() {
   drawInitialScreen();
   
   rtc.begin();
-  rtc.setTime(time_hours, time_minutes, time_seconds);
-
+  rtc.setTime(COMPILETIME_HOUR, COMPILETIME_MINUTE, COMPILETIME_SECOND);
   BLEsetup();
 }
 
 void loop() {
   aci_loop();//Process any ACI commands or events from the NRF8001- main BLE handler, must run often. Keep main loop short.
+  checkAlarmTime();
+    if (isAlarmActive) {
+        handleAlarmShake();
+    }
+
   readSteps();
 
   switch (currentScreen) {
@@ -601,9 +610,16 @@ void drawFace(int x, int y, uint16_t color) {
 
 // Displays main menu
 void displayMenu() {
-  display.setCursor(5, 15);
-  display.print("Alarm: ");
-  display.print(alarmValueStr);
+
+  String currentTimeStr = getCurrentTimeStr();
+    // Display the current time or the alarm time
+    display.setCursor(5, 15);
+    display.print("Alarm: ");
+    if (currentTimeStr == alarmValueStr) {
+        display.print("Wake");
+    } else {
+        display.print(alarmValueStr);
+    }
 
   display.setCursor(5, 25);
   display.print("Goal: ");
@@ -619,6 +635,51 @@ void displayMenu() {
     drawFace(80, 35, TS_8b_Green); 
     faceDisplayed = true;
   }
+}
+
+//Setting the Current RTC into a function to avoid codes that repeats the same purpose
+String getCurrentTimeStr() {
+    String currentHours = String(rtc.getHours());
+    String currentMinutes = String(rtc.getMinutes());
+    if (currentHours.length() == 1) currentHours = "0" + currentHours;
+    if (currentMinutes.length() == 1) currentMinutes = "0" + currentMinutes;
+    return currentHours + ":" + currentMinutes;
+}
+
+// Checking Alarm Time HH:MM If it matches with the updated alarmValueStr which was received from App/Web
+void checkAlarmTime() {
+    String currentTimeStr = getCurrentTimeStr();
+    
+    // Extract the alarm hours and minutes from the alarmValueStr
+    String hours = alarmValueStr.substring(0, 2);
+    String minutes = alarmValueStr.substring(3, 5);
+
+    if (currentTimeStr == alarmValueStr && !isAlarmActive) {
+        display.setCursor(5, 15);
+        isAlarmActive = true;
+    }
+}
+
+// Alarm Shake
+void handleAlarmShake() {
+    accel_sensor.read();
+    int16_t x = accel_sensor.X;
+    int16_t y = accel_sensor.Y;
+    int16_t z = accel_sensor.Z;
+
+    int16_t shakeThreshold = 500; // Shake Sensitivity Level
+
+    if (abs(x) > shakeThreshold || abs(y) > shakeThreshold || abs(z) > shakeThreshold) {
+        // Shake detected which reverts back to the original timing
+        revertAlarmDisplay();
+        isAlarmActive = false;
+    }
+}
+void revertAlarmDisplay() {
+    alarmValueStr = "10:00"; //Back to original hardcoded timing or specific timing which was sent via Nrf Connect (Need to change)
+    display.setCursor(5, 15);
+    display.print("Alarm: ");
+    display.print(alarmValueStr);
 }
 
 

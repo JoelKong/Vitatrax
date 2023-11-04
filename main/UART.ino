@@ -266,9 +266,9 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
   weight = formattedWeight;
 
   // Handle for alarm
-  String hours = alarm.substring(0, 2);
-  String minutes = alarm.substring(2, 4);
-  alarmValueStr = hours + ":" + minutes;
+        String hours = alarm.substring(0, 2);
+        String minutes = alarm.substring(2, 4);
+        alarmValueStr = hours + ":" + minutes;
 
   // Handle for step progress
   char formattedProg[8];
