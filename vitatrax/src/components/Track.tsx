@@ -22,38 +22,6 @@ export default function Track({ setModal }: any): JSX.Element {
   });
   const [loading, setLoading] = useState<boolean>(false);
   const [firstInstance, setFirstInstance] = useState(false);
-  const [currentDate, setCurrentDate] = useState<string>(getCurrentDate());
-
-  // Function to get the current date
-  function getCurrentDate() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
-
-  // Check if the date has changed, and reset step progress
-  async function checkAndResetStepProgressDate() {
-    let { data: settings, error } = await supabase
-      .from("settings")
-      .select("current_date")
-      .eq("id", "1");
-
-    const currentDateWithoutTimeZone = new Date(settings![0].current_date);
-    const formattedDate = currentDateWithoutTimeZone
-      .toISOString()
-      .split("T")[0];
-
-    if (formattedDate !== currentDate) {
-      // setStepProgress({ progress: 0, goal: stepProgress.goal });
-
-      await supabase
-        .from("settings")
-        .update({ current_date: currentDate, step_progress: 0 })
-        .eq("id", "1");
-    }
-  }
 
   // Connect to Bluetooth
   async function connectToBluetooth() {
@@ -287,16 +255,6 @@ export default function Track({ setModal }: any): JSX.Element {
   }
 
   useEffect(() => {
-    const currentDateNow = getCurrentDate();
-    setCurrentDate(currentDateNow);
-    checkAndResetStepProgressDate();
-
-    const checkDate = setInterval(() => {
-      const currentDateNow = getCurrentDate();
-      setCurrentDate(currentDateNow);
-      checkAndResetStepProgressDate();
-    }, 5000);
-
     readData();
 
     const settings = supabase
@@ -314,7 +272,6 @@ export default function Track({ setModal }: any): JSX.Element {
       .subscribe();
 
     return () => {
-      clearInterval(checkDate);
       settings.unsubscribe();
     };
   }, []);
@@ -328,7 +285,6 @@ export default function Track({ setModal }: any): JSX.Element {
   return (
     <>
       <div className="w-full flex flex-col items-center justify-center">
-        <Countdown currentDate={currentDate} />
         {server ? (
           <button
             className="bg-blue-300 w-11/12 lg:w-1/4 h-12 rounded-2xl font-medium text-xl tracking-widest hover:bg-blue-400 disabled:cursor-not-allowed"
