@@ -63,10 +63,9 @@ export default function Description(): JSX.Element {
               Why Vitatrax?
             </header>
             <p className="pt-4 text-lg tracking-wide">
-              By walking instead of using vehicles, you reduce your carbon
-              footprint. Keep yourself healthy! To relax after a stressful day.
-              With vitatrax, you can walk to earn rewards and save the
-              environment at the same time!
+              {
+                "By walking instead of using vehicles, you reduce your carbon footprint. Keep yourself healthy! To relax after a stressful day. With vitatrax, you can walk to earn rewards and save the environment at the same time!"
+              }
             </p>
           </div>
         </div>
