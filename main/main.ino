@@ -73,6 +73,9 @@ String faceType = "h";
 //Alarm
 String alarmValueStr = "10:00";
 bool isAlarmActive = false;
+bool alarmShake = false; // Check that if the accelerometer was shake was done
+String previousTimeStr = "";
+bool menuNavigated = false; //For Alarm Purpose
 
 // Progress bar variables
 unsigned long previousMillis = 0;
@@ -149,6 +152,7 @@ void loop() {
       displayAnimationScreen();
       drawBatterySymbol(display, 14, 1, batteryPercentage);
       displayTime();
+      returnToDisplayMenu(); //  For Alarm to show after navigating to different menu
       break;
     case MENU_SCREEN:
       // Displays menu
@@ -159,11 +163,13 @@ void loop() {
     case TRACKER_SCREEN:
       displayStopwatch(); // Update and display the stopwatch
       checkForSteps();
+      returnToDisplayMenu(); // For Alarm to show after navigating to different menu
       break;
     case ECO_SCREEN:
       displayEco();
       drawBatterySymbol(display, 14, 1, batteryPercentage);
       displayTime();
+      returnToDisplayMenu(); // For Alarm to show after navigating to different menu
       break;
     case GAME_SCREEN:
       drawGame();
@@ -611,16 +617,21 @@ void drawFace(int x, int y, uint16_t color) {
 
 // Displays main menu
 void displayMenu() {
-
   String currentTimeStr = getCurrentTimeStr();
-    // Display the current time or the alarm time
-    display.setCursor(5, 15);
-    display.print("Alarm: ");
-    if (currentTimeStr == alarmValueStr) {
-        display.print("Wake");
-    } else {
-        display.print(alarmValueStr);
-  }
+    // Check if the screen needs updating
+    if (!isAlarmActive || !previousTimeStr.equals(currentTimeStr) || menuNavigated) {
+        display.setCursor(5, 15);
+        display.print("Alarm: ");
+        
+        // Shows Wake if Current RTC and Alarm Time from Web App matches
+        if (isAlarmActive && currentTimeStr.equals(alarmValueStr)) {
+            display.print("Wake");
+        } else {
+            display.print(alarmValueStr);
+        }
+        previousTimeStr = currentTimeStr; // Update Previous Time
+        menuNavigated = false; // Reset the navigation flag
+    }
 
   if (goalDisplayed) {
     display.setCursor(5, 25);
@@ -647,6 +658,10 @@ void displayMenu() {
   }
 }
 
+void returnToDisplayMenu() {
+  menuNavigated = true; // Alarm Purpose
+}
+
 //Setting the Current RTC into a function to avoid codes that repeats the same purpose
 String getCurrentTimeStr() {
     String currentHours = String(rtc.getHours());
@@ -656,14 +671,9 @@ String getCurrentTimeStr() {
     return currentHours + ":" + currentMinutes;
 }
 
-// Checking Alarm Time HH:MM If it matches with the updated alarmValueStr which was received from App/Web
+// Checking Alarm Time HH:MM Matches the Alarm which was sent from the Web App
 void checkAlarmTime() {
     String currentTimeStr = getCurrentTimeStr();
-    
-    // Extract the alarm hours and minutes from the alarmValueStr
-    String hours = alarmValueStr.substring(0, 2);
-    String minutes = alarmValueStr.substring(3, 5);
-
     if (currentTimeStr == alarmValueStr && !isAlarmActive) {
         display.setCursor(5, 15);
         isAlarmActive = true;
@@ -679,20 +689,20 @@ void handleAlarmShake() {
 
     int16_t shakeThreshold = 500; // Shake Sensitivity Level
 
-    if (abs(x) > shakeThreshold || abs(y) > shakeThreshold || abs(z) > shakeThreshold) {
-        // Shake detected which reverts back to the original timing
-        revertAlarmDisplay();
-        isAlarmActive = false;
+    if ((abs(x) > shakeThreshold || abs(y) > shakeThreshold || abs(z) > shakeThreshold) && isAlarmActive) {
+        // Shake detected, revert the display
+        isAlarmActive = false; // Disable the alarm after Shake
+        alarmShake = true; // Set a pointer that Shake occured
+        revertAlarmDisplay(); // Revert Back to Alarm Timing
     }
 }
+
 void revertAlarmDisplay() {
-    alarmValueStr = "10:00"; //Back to original hardcoded timing or specific timing which was sent via Nrf Connect (Need to change)
     display.setCursor(5, 15);
     display.print("Alarm: ");
-    display.print(alarmValueStr);
+    display.print(alarmValueStr); // Show Alarm Time
+    alarmShake = false; //
 }
-
-
 
 void clearSection(int x, int y, int width, int height, uint16_t backgroundColor) {
   for (int i = 0; i < height; i++) {
