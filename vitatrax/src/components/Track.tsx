@@ -365,6 +365,9 @@ export default function Track({ setModal }: any): JSX.Element {
                   goal={stepProgress.goal}
                 />
               </div>
+              <p className="text-center mt-6 tracking-wide font-bold text-lg text-green-400 pr-10 md:text-2xl">
+                Every 1000 steps gives you 10 eco-points! Keep it up!
+              </p>
               <div className="pt-6">
                 <p className="font-medium">Alarm</p>
                 <input
@@ -481,7 +484,7 @@ export default function Track({ setModal }: any): JSX.Element {
                   )}
                 </span>
               </button>
-              <div className="w-11/12 pt-6 flex justify-center items-center">
+              <div className="w-11/12 pt-6 flex justify-center items-center tracking-wider text-lg">
                 {result}
               </div>
             </div>

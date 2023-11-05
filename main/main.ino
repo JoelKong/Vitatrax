@@ -113,8 +113,8 @@ int prevBallY = 32;
 int score = 0;
 const int ballSpeedIncrease = 1;  // Increase speed by 1 pixel per frame
 const int paddleSpeedIncrease = 1;  // Increase speed by 1 pixel per frame
-const int maxBallSpeed = 4;  // Maximum speed for the ball
-const int maxPaddleSpeed = 5;  // Maximum speed for the paddles
+const int maxBallSpeed = 5;  // Maximum speed for the ball
+const int maxPaddleSpeed = 6;  // Maximum speed for the paddles
 
 // Screens
 enum ScreenType {

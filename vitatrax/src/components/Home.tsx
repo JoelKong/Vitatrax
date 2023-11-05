@@ -6,6 +6,7 @@ import Description from "./Description";
 import Countdown from "./Countdown";
 import supabase from "@/utils/supabase";
 import Progress from "./Progress";
+import Shop from "./Shop";
 
 export default function Home(): JSX.Element {
   const [switchScreen, setSwitchScreen] = useState({
@@ -44,6 +45,16 @@ export default function Home(): JSX.Element {
 
     if (formattedDate !== currentDate) {
       let { data: allData } = await supabase.from("settings").select("*");
+
+      let currentPoints = parseInt(allData![0].eco_points);
+      let additionalEcoPoints =
+        Math.floor(parseInt(allData![0].step_progress) / 1000) * 10;
+      let totalPoints = currentPoints + additionalEcoPoints;
+
+      await supabase
+        .from("settings")
+        .update({ eco_points: totalPoints })
+        .eq("id", "1");
 
       const calories = (3.9 * allData![0].weight * 3.5) / 200;
       const emission = (calories / 100) * 2.2;
@@ -195,7 +206,7 @@ export default function Home(): JSX.Element {
       {switchScreen.connect && <Track setModal={setModal} />}
       {switchScreen.timings && <History />}
       {switchScreen.progress && <Progress />}
-      {switchScreen.shop && <div>shop</div>}
+      {switchScreen.shop && <Shop setModal={setModal} />}
       <Description />
     </>
   );
