@@ -56,23 +56,26 @@ export default function Home(): JSX.Element {
         .update({ eco_points: totalPoints })
         .eq("id", "1");
 
-      const calories = (3.9 * allData![0].weight * 3.5) / 200;
-      const emission = (calories / 100) * 2.2;
-      const trees_saved = (allData![0].step_progress * emission) / 21.77;
-      const car_miles = emission / 2.3;
+      if (allData![0].step_progress > 0) {
+        const calories = (3.9 * allData![0].weight * 3.5) / 200;
+        const emission = (calories / 100) * 2.2;
+        const trees_saved = (allData![0].step_progress * emission) / 21.77;
+        const car_miles = emission / 2.3;
 
-      await supabase
-        .from("eco")
-        .insert([
-          {
-            weight: allData![0].weight,
-            step_progress: allData![0].step_progress,
-            emissions: emission,
-            trees_saved: trees_saved,
-            car_miles: car_miles,
-          },
-        ])
-        .select();
+        await supabase
+          .from("eco")
+          .insert([
+            {
+              updated_date: allData![0].current_date,
+              weight: allData![0].weight,
+              step_progress: allData![0].step_progress,
+              emissions: emission,
+              trees_saved: trees_saved,
+              car_miles: car_miles,
+            },
+          ])
+          .select();
+      }
 
       await supabase
         .from("settings")
