@@ -8,16 +8,6 @@
 #include <RTCZero.h>
 RTCZero rtc;
 
-// Initialise bluetooth
-// #ifndef BLE_DEBUG
-// #define BLE_DEBUG true
-// #endif
-
-// #if defined (ARDUINO_ARCH_AVR)
-// #define SerialMonitorInterface Serial
-// #elif defined(ARDUINO_ARCH_SAMD)
-// #define SerialMonitorInterface SerialUSB
-// #endif
 
 uint8_t ble_rx_buffer[21];
 uint8_t ble_rx_buffer_len = 0;
@@ -87,7 +77,7 @@ unsigned long lastUpdateMillis = 0; // Store the last time the progress bar was 
 // Eco
 String weight = "070kg";
 
-//Time
+// Time
 const byte time_hours = 13;
 const byte time_minutes = 51;
 const byte time_seconds = 0;
@@ -139,7 +129,7 @@ void setup() {
 }
 
 void loop() {
-  aci_loop();//Process any ACI commands or events from the NRF8001- main BLE handler, must run often. Keep main loop short.
+  aci_loop(); //Process any ACI commands or events from the NRF8001- main BLE handler, must run often. Keep main loop short.
   checkAlarmTime();
     if (isAlarmActive) {
         handleAlarmShake();
@@ -155,7 +145,6 @@ void loop() {
       returnToDisplayMenu(); //  For Alarm to show after navigating to different menu
       break;
     case MENU_SCREEN:
-      // Displays menu
       displayMenu();
       drawBatterySymbol(display, 14, 1, batteryPercentage);
       displayTime();
@@ -662,7 +651,7 @@ void returnToDisplayMenu() {
   menuNavigated = true; // Alarm Purpose
 }
 
-//Setting the Current RTC into a function to avoid codes that repeats the same purpose (JiaYi)
+// Setting the Current RTC into a function to avoid codes that repeats the same purpose (JiaYi)
 String getCurrentTimeStr() {
     String currentHours = String(rtc.getHours());
     String currentMinutes = String(rtc.getMinutes());
@@ -832,14 +821,6 @@ void displayProgressBar(int totalSteps, int stepGoal) {
   // Determine the progress bar color based on goal completion
   uint16_t progressBarColor = (totalSteps >= stepGoal) ? TS_8b_Green : TS_8b_Red;
 
-/*
-  // Clear the previous progress
-  for (int x = xPos; x < xPos + prevFilledWidth; x++) {
-    for (int y = yPos; y < yPos + barHeight; y++) {
-      display.drawPixel(x, y, TS_8b_Black);
-    }
-  }
-*/
   // Draw the filled part of the progress bar
   for (int x = xPos; x < xPos + filledWidth; x++) {
     for (int y = yPos; y < yPos + barHeight; y++) {
@@ -869,15 +850,6 @@ void displayProgressBar(int totalSteps, int stepGoal) {
   if (currentMillis - lastUpdateMillis >= progressUpdateInterval) {
     lastUpdateMillis = currentMillis;
   }
-  /* For troubleshooting
-  // Update the live text in real-time
-  display.fontColor(TS_8b_Green, TS_8b_Black);
-  display.setCursor(15, 30);
-  display.print("Prog: ");
-  display.print(totalSteps);
-  display.print(" / ");
-  display.print(stepGoal);
-  */
 }
   
 // Function to check for steps and update totalSteps (Erin)
@@ -973,6 +945,7 @@ float getVCC() {
   float vcc = (1.1 * 1023.0) / valueRead;
   return vcc;
 }
+
 // Calculate the battery voltage (JiaYi)
 float getBattVoltage(void) {
   const int VBATTpin = A4;

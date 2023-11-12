@@ -1,0 +1,12 @@
+Contributions:
+Main menu screen, game screen, stopwatch, website: Joel
+Battery and time: Jia Yi
+Second screen with stats: Shermaine, Joshua and Jun wei
+Third screen with progress bar: Erin
+Eco screen: Joshua
+
+More details on specific contributions can be found in main.ino
+
+Tech stack: Arduino(Tiny Circuit), NextJS, TailwindCSS, Supabase, Nodejs (Website)
+
+Access the website at: https://vitatrax.vercel.app/
