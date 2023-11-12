@@ -186,7 +186,7 @@ void initializeAccel() {
   accel_sensor.begin(BMA250_range_2g, BMA250_update_time_64ms); 
 }
 
-// Buttons
+// Buttons (Joel)
 void handleButtonPresses() {
   unsigned long currentTime = millis();
   bool currButtonState = display.getButtons() & TSButtonUpperRight;
@@ -282,7 +282,7 @@ void transitionToGameScreen() {
 
 
 
-// First Screen
+// First Screen (Joel)
 void initializeDisplay() {
   Wire.begin();
   display.begin();
@@ -363,7 +363,7 @@ void drawTextBesideArrow(const char* text, int x, int y, uint8_t bg) {
 }
 
 
-// Game screen
+// Game screen (Joel)
 void drawGameScreen() {
   display.clearScreen();
 
@@ -481,7 +481,7 @@ if (ballX <= paddleWidth && ballY + ballSize >= playerY && ballY <= playerY + pa
 
 
 
-// Second screen
+// Second screen (Shermaine, Joshua, Jun Wei)
 void drawMenu() {
   if (currentScreen == MENU_SCREEN) {
     display.clearScreen();
@@ -498,7 +498,7 @@ void drawMenu() {
   }
 }
 
-// Steps functions
+// Steps functions (Joshua)
 int readSteps() {
   accel_sensor.read();
 
@@ -573,7 +573,7 @@ int readSteps() {
   return 0;
 }
 
-// Mood Indicator functions
+// Mood Indicator functions (Shermaine)
 // Draw circle for the face
 void drawFilledCircle(int x0, int y0, int radius, uint16_t color) {
   for (int x = -radius; x <= radius; x++) {
@@ -585,7 +585,7 @@ void drawFilledCircle(int x0, int y0, int radius, uint16_t color) {
   }
 }
 
-// Smiley/Neutral/Sad Face
+// Smiley/Neutral/Sad Face (Shermaine)
 void drawFace(int x, int y, uint16_t color) {
   // Face
   drawFilledCircle(x, y, 10, color);
@@ -662,7 +662,7 @@ void returnToDisplayMenu() {
   menuNavigated = true; // Alarm Purpose
 }
 
-//Setting the Current RTC into a function to avoid codes that repeats the same purpose
+//Setting the Current RTC into a function to avoid codes that repeats the same purpose (JiaYi)
 String getCurrentTimeStr() {
     String currentHours = String(rtc.getHours());
     String currentMinutes = String(rtc.getMinutes());
@@ -671,7 +671,7 @@ String getCurrentTimeStr() {
     return currentHours + ":" + currentMinutes;
 }
 
-// Checking Alarm Time HH:MM Matches the Alarm which was sent from the Web App
+// Checking Alarm Time HH:MM Matches the Alarm which was sent from the Web App (Jun Wei)
 void checkAlarmTime() {
     String currentTimeStr = getCurrentTimeStr();
     if (currentTimeStr == alarmValueStr && !isAlarmActive) {
@@ -680,7 +680,7 @@ void checkAlarmTime() {
     }
 }
 
-// Alarm Shake
+// Alarm Shake (Jun Wei)
 void handleAlarmShake() {
     accel_sensor.read();
     int16_t x = accel_sensor.X;
@@ -724,7 +724,7 @@ void displayPopup(String message) {
 
 
 
-// Third screen
+// Third screen (Erin, Joel)
 void drawTracker() {
   if (currentScreen == TRACKER_SCREEN) {  // Guard the drawing with a condition to prevent unnecessary redrawing
     display.clearScreen();
@@ -752,7 +752,7 @@ void drawTracker() {
   }
 }
 
-// Stopwatch Functions
+// Stopwatch Functions (Joel)
 void startStopwatch() {
   stopwatchStartTime = millis();
   stopwatchRunning = true;
@@ -807,14 +807,14 @@ void toggleStopwatch() {
   drawTracker();  // Refresh the tracker screen to update the UI
 }
 
-// Accelerometer Functions
+// Accelerometer Functions (Joel)
 double readTemperature() {
   accel_sensor.read();
   temp = ((accel_sensor.rawTemp * 0.5) + 24.0);
   return temp;
 }
 
-// Progress bar Function
+// Progress bar Function (Erin)
 void displayProgressBar(int totalSteps, int stepGoal) {
   unsigned long currentMillis = millis();
 
@@ -880,7 +880,7 @@ void displayProgressBar(int totalSteps, int stepGoal) {
   */
 }
   
-// Function to check for steps and update totalSteps
+// Function to check for steps and update totalSteps (Erin)
 void checkForSteps() {
   int stepDetected = readSteps(); // This function checks for steps and returns 1 if a step is detected
 
@@ -889,7 +889,7 @@ void checkForSteps() {
   }
 }
 
-// Fourth screen
+// Fourth screen (Joshua)
 void drawEco() {
   if (currentScreen == ECO_SCREEN) {  // Guard the drawing with a condition to prevent unnecessary redrawing
     display.clearScreen();
@@ -942,6 +942,7 @@ void display2digits(int number) {
   display.print(number);
 }
 
+// JiaYi
 void displayTime() {
   display.setFont(liberationSans_8ptFontInfo); // Choose a font size
   display.setCursor(50, 0); // Set the cursor position
@@ -949,7 +950,7 @@ void displayTime() {
   display.print(":");
   display2digits(rtc.getMinutes());
 }
-
+// JiaYi
 float getVCC() {
   SYSCTRL->VREF.reg |= SYSCTRL_VREF_BGOUTEN;
   while (ADC->STATUS.bit.SYNCBUSY == 1);
@@ -972,7 +973,7 @@ float getVCC() {
   float vcc = (1.1 * 1023.0) / valueRead;
   return vcc;
 }
-// Calculate the battery voltage
+// Calculate the battery voltage (JiaYi)
 float getBattVoltage(void) {
   const int VBATTpin = A4;
   float VCC = getVCC();
@@ -987,7 +988,7 @@ float getBattVoltage(void) {
   return battVoltage;
 }
 
-// Calculate the battery voltage
+// Calculate the battery voltage (JiaYi)
 float getBattPercent()
 {
   float batteryLeft = max((getBattVoltage() - 3.00), 0);
