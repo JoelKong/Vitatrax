@@ -2,7 +2,7 @@ Contributions:
 Main menu screen, game screen, stopwatch, website: Joel
 Battery and time: Jia Yi
 Second screen with stats: Shermaine, Joshua and Jun wei
-Third screen with progress bar: Erin
+Third screen stopwatch/progress bar, Documentation: Erin
 Eco screen: Joshua
 
 More details on specific contributions can be found in main.ino
