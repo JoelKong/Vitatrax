@@ -741,7 +741,7 @@ void drawTracker() {
   }
 }
 
-// Stopwatch Functions (Joel)
+// Stopwatch Functions (Erin, Joel)
 void startStopwatch() {
   stopwatchStartTime = millis();
   stopwatchRunning = true;
