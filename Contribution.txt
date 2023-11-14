@@ -10,3 +10,4 @@ More details on specific contributions can be found in main.ino
 Tech stack: Arduino(Tiny Circuit), NextJS, TailwindCSS, Supabase, Nodejs (Website)
 
 Access the website at: https://vitatrax.vercel.app/
+Connect to bluetooth function only works on CHROME
